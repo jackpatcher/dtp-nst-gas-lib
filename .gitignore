@@ -1,0 +1,30 @@
+# Google Apps Script
+.clasp.json
+.claspignore
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*~
+
+# Credentials (never commit)
+credentials.json
+secrets.json
+config.local.json
+
+# Test files
+test/
+*.test.gs
