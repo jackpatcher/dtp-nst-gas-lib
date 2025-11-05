@@ -220,6 +220,7 @@ conn.disconnect();
 
 | ตาราง | คำอธิบาย | สิทธิ์ Admin | สิทธิ์ User |
 |-------|---------|--------------|-------------|
+| **config** | ⭐ ตั้งค่าระบบ (key-value) | CRUD | ไม่มีสิทธิ์ |
 | **users** | บัญชีผู้ใช้ | CRUD | อ่านเฉพาะองค์กรตัวเอง |
 | **organizations** | หน่วยงาน/องค์กร | CRUD | อ่านเฉพาะองค์กรตัวเอง |
 | **positions** | ตำแหน่งงาน | CRUD | อ่านอย่างเดียว |
@@ -277,6 +278,32 @@ function addAdmin() {
 function addApp() {
   const result = registerApp('New App', 'คำอธิบาย');
   Logger.log('App Key:', result.data.app_key);
+}
+```
+
+### จัดการ Config
+
+```javascript
+// ดู config ทั้งหมด
+function viewConfig() {
+  const config = viewAllConfig();
+  Logger.log('All Config:', config.data.object);
+}
+
+// แก้ไข config
+function changeTokenExpiry() {
+  updateConfig('token_expiry_hours', '48', 'เปลี่ยนเป็น 48 ชม.');
+}
+
+// เพิ่ม config ใหม่
+function addNewConfig() {
+  addConfig('max_login_attempts', '5', 'จำนวนครั้ง login สูงสุด');
+}
+
+// ใช้งาน config ในโค้ด
+function useConfig() {
+  const tokenHours = Helpers.getConfig('token_expiry_hours', '24');
+  Logger.log('Token expires in:', tokenHours, 'hours');
 }
 ```
 

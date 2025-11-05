@@ -37,7 +37,11 @@ function setupLibrary() {
       return result;
     }
     
-    // 3. ดึงข้อมูล spreadsheet
+    // 3. สร้าง default config
+    Logger.log('Setting up default configuration...');
+    initializeDefaultConfig();
+    
+    // 4. ดึงข้อมูล spreadsheet
     const ss = Sheet.getSpreadsheet();
     
     Logger.log('✅ Setup completed successfully!');
@@ -62,6 +66,57 @@ function setupLibrary() {
   } catch (error) {
     Logger.log('❌ Setup failed: ' + error.toString());
     return Helpers.response(false, null, 'Setup failed: ' + error.message);
+  }
+}
+
+/**
+ * สร้าง config เริ่มต้น
+ * @private
+ */
+function initializeDefaultConfig() {
+  try {
+    const defaultConfigs = [
+      {
+        key: 'library_version',
+        value: '2.0.0',
+        description: 'เวอร์ชันของ library'
+      },
+      {
+        key: 'token_expiry_hours',
+        value: '24',
+        description: 'จำนวนชั่วโมงก่อน token หมดอายุ'
+      },
+      {
+        key: 'log_retention_days',
+        value: '90',
+        description: 'จำนวนวันที่เก็บ log (เก่ากว่านี้จะถูกลบ)'
+      },
+      {
+        key: 'password_min_length',
+        value: '6',
+        description: 'ความยาวขั้นต่ำของรหัสผ่าน'
+      },
+      {
+        key: 'system_name',
+        value: 'DTP NST Library',
+        description: 'ชื่อระบบ'
+      },
+      {
+        key: 'timezone',
+        value: 'Asia/Bangkok',
+        description: 'เขตเวลา'
+      }
+    ];
+    
+    defaultConfigs.forEach(function(config) {
+      Helpers.setConfig(config.key, config.value, config.description);
+    });
+    
+    Logger.log('✅ Default config initialized');
+    
+  } catch (error) {
+    Logger.log('⚠️  Config initialization failed: ' + error.toString());
+    // Don't throw - setup should continue even if config fails
   }
 }
 
@@ -469,4 +524,69 @@ function getStatistics() {
     Logger.log('getStatistics error: ' + error.toString());
     return Helpers.response(false, null, 'Failed to get statistics');
   }
+}
+
+// ====================================
+// CONFIG MANAGEMENT
+// ====================================
+
+/**
+ * ดู config ทั้งหมด
+ * 
+ * @returns {Object} {success: boolean, data: Object, message: string}
+ * 
+ * @example
+ * function viewConfig() {
+ *   const result = viewAllConfig();
+ *   Logger.log(result.data.object);
+ * }
+ */
+function viewAllConfig() {
+  return Helpers.getAllConfig();
+}
+
+/**
+ * แก้ไข config
+ * 
+ * @param {string} key - Config key
+ * @param {*} value - ค่าใหม่
+ * @param {string} description - คำอธิบาย (optional)
+ * @returns {Object} {success: boolean, message: string}
+ * 
+ * @example
+ * function updateTokenExpiry() {
+ *   const result = updateConfig('token_expiry_hours', '48', 'เพิ่มเป็น 48 ชม.');
+ *   Logger.log(result);
+ * }
+ */
+function updateConfig(key, value, description) {
+  return Helpers.setConfig(key, value, description);
+}
+
+/**
+ * เพิ่ม config ใหม่
+ * 
+ * @param {string} key - Config key
+ * @param {*} value - ค่า
+ * @param {string} description - คำอธิบาย
+ * @returns {Object} {success: boolean, message: string}
+ * 
+ * @example
+ * function addNewConfig() {
+ *   const result = addConfig('max_login_attempts', '5', 'จำนวนครั้งที่พยายาม login สูงสุด');
+ *   Logger.log(result);
+ * }
+ */
+function addConfig(key, value, description) {
+  return Helpers.setConfig(key, value, description);
+}
+
+/**
+ * ลบ config
+ * 
+ * @param {string} key - Config key
+ * @returns {Object} {success: boolean, message: string}
+ */
+function removeConfig(key) {
+  return Helpers.deleteConfig(key);
 }

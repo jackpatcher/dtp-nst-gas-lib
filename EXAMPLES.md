@@ -624,4 +624,247 @@ function quickTest() {
 
 ---
 
+---
+
+## 8. Config Management
+
+### ดู Config ทั้งหมด
+
+```javascript
+function exampleViewConfig() {
+  const result = viewAllConfig();
+  
+  if (result.success) {
+    Logger.log('=== All Configuration ===');
+    
+    // แสดงแบบ list
+    result.data.list.forEach(function(config) {
+      Logger.log(config.key + ':', config.value);
+      Logger.log('  Description:', config.description);
+      Logger.log('  Updated:', config.updated_at);
+      Logger.log('');
+    });
+    
+    // หรือแสดงแบบ object (ง่ายกว่า)
+    Logger.log('\n=== As Object ===');
+    Logger.log(result.data.object);
+  }
+}
+```
+
+### อ่าน Config เดียว
+
+```javascript
+function exampleGetConfig() {
+  // อ่าน config เดียว
+  const tokenHours = Helpers.getConfig('token_expiry_hours');
+  Logger.log('Token expires in:', tokenHours, 'hours');
+  
+  // อ่านพร้อม default value
+  const maxAttempts = Helpers.getConfig('max_login_attempts', '3');
+  Logger.log('Max login attempts:', maxAttempts);
+  
+  // ใช้งานจริง
+  const logRetention = parseInt(Helpers.getConfig('log_retention_days', '90'));
+  Logger.log('Keep logs for', logRetention, 'days');
+}
+```
+
+### แก้ไข Config
+
+```javascript
+function exampleUpdateConfig() {
+  // เปลี่ยน token expiry เป็น 48 ชม.
+  const result1 = updateConfig(
+    'token_expiry_hours',
+    '48',
+    'เพิ่มเวลาหมดอายุเป็น 48 ชั่วโมง'
+  );
+  Logger.log('Update result:', result1.message);
+  
+  // เปลี่ยนชื่อระบบ
+  const result2 = updateConfig(
+    'system_name',
+    'DTP NST Library v2.0',
+    'อัปเดตชื่อระบบ'
+  );
+  Logger.log('Update result:', result2.message);
+}
+```
+
+### เพิ่ม Config ใหม่
+
+```javascript
+function exampleAddConfig() {
+  // เพิ่ม config ใหม่
+  const configs = [
+    {
+      key: 'max_login_attempts',
+      value: '5',
+      description: 'จำนวนครั้งที่พยายาม login สูงสุดก่อนล็อคบัญชี'
+    },
+    {
+      key: 'session_timeout_minutes',
+      value: '30',
+      description: 'เวลา timeout ของ session (นาที)'
+    },
+    {
+      key: 'enable_email_notification',
+      value: 'true',
+      description: 'เปิด/ปิด การแจ้งเตือนทางอีเมล'
+    },
+    {
+      key: 'admin_email',
+      value: 'admin@example.com',
+      description: 'อีเมลของผู้ดูแลระบบ'
+    }
+  ];
+  
+  configs.forEach(function(config) {
+    const result = addConfig(config.key, config.value, config.description);
+    
+    if (result.success) {
+      Logger.log('✅ Added:', config.key);
+    } else {
+      Logger.log('❌ Failed:', config.key, '-', result.message);
+    }
+  });
+}
+```
+
+### ลบ Config
+
+```javascript
+function exampleRemoveConfig() {
+  const result = removeConfig('old_config_key');
+  
+  if (result.success) {
+    Logger.log('✅ Config removed');
+  } else {
+    Logger.log('❌ Failed:', result.message);
+  }
+}
+```
+
+### ใช้ Config ในการทำงาน
+
+```javascript
+function exampleUseConfig() {
+  // 1. ใช้ config กำหนด token expiry
+  function createCustomToken(user, userType) {
+    const hours = parseInt(Helpers.getConfig('token_expiry_hours', '24'));
+    const token = Helpers.generateToken();
+    const expires = new Date();
+    expires.setHours(expires.getHours() + hours);
+    
+    return {
+      token: token,
+      expiresAt: expires.toISOString(),
+      expiryHours: hours
+    };
+  }
+  
+  // 2. ใช้ config กำหนด password policy
+  function validatePasswordWithConfig(password) {
+    const minLength = parseInt(Helpers.getConfig('password_min_length', '6'));
+    
+    if (password.length < minLength) {
+      return {
+        valid: false,
+        message: 'Password must be at least ' + minLength + ' characters'
+      };
+    }
+    
+    return { valid: true };
+  }
+  
+  // 3. ใช้ config ควบคุม features
+  function sendNotificationIfEnabled(message) {
+    const enabled = Helpers.getConfig('enable_email_notification', 'false');
+    
+    if (enabled === 'true') {
+      const adminEmail = Helpers.getConfig('admin_email', '');
+      if (adminEmail) {
+        // MailApp.sendEmail(adminEmail, 'Notification', message);
+        Logger.log('📧 Email sent to:', adminEmail);
+      }
+    } else {
+      Logger.log('📧 Email notification is disabled');
+    }
+  }
+  
+  // ทดสอบ
+  const tokenInfo = createCustomToken({}, 'admin');
+  Logger.log('Token expires in:', tokenInfo.expiryHours, 'hours');
+  
+  const passwordCheck = validatePasswordWithConfig('12345');
+  Logger.log('Password valid:', passwordCheck.valid);
+  
+  sendNotificationIfEnabled('Test notification');
+}
+```
+
+### Export/Import Config
+
+```javascript
+function exampleExportConfig() {
+  // Export config เป็น JSON
+  const result = viewAllConfig();
+  
+  if (result.success) {
+    const configJson = JSON.stringify(result.data.object, null, 2);
+    Logger.log('=== Config Export ===');
+    Logger.log(configJson);
+    
+    // เก็บใน Properties (ถ้าต้องการ backup)
+    PropertiesService.getScriptProperties().setProperty(
+      'config_backup',
+      configJson
+    );
+    
+    Logger.log('✅ Config backed up to Script Properties');
+  }
+}
+
+function exampleImportConfig() {
+  // Import config จาก JSON
+  const configJson = PropertiesService.getScriptProperties().getProperty('config_backup');
+  
+  if (configJson) {
+    const configs = JSON.parse(configJson);
+    
+    Object.keys(configs).forEach(function(key) {
+      addConfig(key, configs[key], 'Imported from backup');
+    });
+    
+    Logger.log('✅ Config restored from backup');
+  } else {
+    Logger.log('❌ No backup found');
+  }
+}
+```
+
+### Reset Config to Default
+
+```javascript
+function resetConfigToDefault() {
+  Logger.log('=== Resetting Config to Default ===');
+  
+  // ลบ config ทั้งหมด
+  const allConfig = viewAllConfig();
+  allConfig.data.list.forEach(function(config) {
+    removeConfig(config.key);
+  });
+  
+  Logger.log('✅ All config removed');
+  
+  // สร้าง default config ใหม่
+  initializeDefaultConfig();
+  
+  Logger.log('✅ Default config recreated');
+}
+```
+
+---
+
 **Happy Coding! 🚀**

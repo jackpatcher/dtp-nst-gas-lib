@@ -13,6 +13,7 @@ let _spreadsheetCache = null;
 // ====================================
 
 const SHEET_SCHEMA = {
+  config: ['key', 'value', 'description', 'updated_at'],
   users: ['uuid', 'name', 'id13', 'password', 'position_id', 'rank_id', 'org_id', 'active', 'created_at', 'updated_at'],
   organizations: ['uuid', 'hrms_id', 'dmz_id', 'org_name', 'subdistrict', 'district', 'province', 'active', 'created_at', 'updated_at'],
   positions: ['uuid', 'name', 'description', 'level', 'active', 'created_at', 'updated_at'],

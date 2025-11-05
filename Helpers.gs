@@ -165,6 +165,124 @@ function Helpers_response(success, data, message) {
 }
 
 // ====================================
+// CONFIG MANAGEMENT
+// ====================================
+
+/**
+ * รับค่า config จาก key
+ * @param {string} key - Config key
+ * @param {*} defaultValue - ค่าเริ่มต้นถ้าไม่พบ (optional)
+ * @returns {*} ค่าของ config หรือ defaultValue
+ */
+function Helpers_getConfig(key, defaultValue) {
+  try {
+    const result = Sheet.read('config', { key: key });
+    
+    if (result.rows.length > 0) {
+      return result.rows[0].value;
+    }
+    
+    return defaultValue !== undefined ? defaultValue : null;
+    
+  } catch (error) {
+    Logger.log('Helpers_getConfig error: ' + error.toString());
+    return defaultValue !== undefined ? defaultValue : null;
+  }
+}
+
+/**
+ * ตั้งค่า config
+ * @param {string} key - Config key
+ * @param {*} value - ค่าที่ต้องการตั้ง
+ * @param {string} description - คำอธิบาย (optional)
+ * @returns {Object} {success: boolean, message: string}
+ */
+function Helpers_setConfig(key, value, description) {
+  try {
+    if (!key) {
+      return Helpers_response(false, null, 'Key is required');
+    }
+    
+    // ตรวจสอบว่ามี key นี้อยู่แล้วหรือไม่
+    const existing = Sheet.read('config', { key: key });
+    
+    if (existing.rows.length > 0) {
+      // Update existing
+      const result = Sheet.update('config', existing.rows[0]._rowNumber, {
+        value: value,
+        description: description || existing.rows[0].description,
+        updated_at: Helpers_now()
+      });
+      
+      return Helpers_response(true, { key: key, value: value }, 'Config updated');
+    } else {
+      // Create new
+      Sheet.append('config', {
+        key: key,
+        value: value,
+        description: description || '',
+        updated_at: Helpers_now()
+      });
+      
+      return Helpers_response(true, { key: key, value: value }, 'Config created');
+    }
+    
+  } catch (error) {
+    Logger.log('Helpers_setConfig error: ' + error.toString());
+    return Helpers_response(false, null, 'Failed to set config: ' + error.message);
+  }
+}
+
+/**
+ * ลบ config
+ * @param {string} key - Config key
+ * @returns {Object} {success: boolean, message: string}
+ */
+function Helpers_deleteConfig(key) {
+  try {
+    const existing = Sheet.read('config', { key: key });
+    
+    if (existing.rows.length === 0) {
+      return Helpers_response(false, null, 'Config key not found');
+    }
+    
+    const sheet = Sheet.getSheet('config');
+    sheet.deleteRow(existing.rows[0]._rowNumber);
+    
+    return Helpers_response(true, null, 'Config deleted');
+    
+  } catch (error) {
+    Logger.log('Helpers_deleteConfig error: ' + error.toString());
+    return Helpers_response(false, null, 'Failed to delete config');
+  }
+}
+
+/**
+ * รับ config ทั้งหมด
+ * @returns {Object} {success: boolean, data: Array, message: string}
+ */
+function Helpers_getAllConfig() {
+  try {
+    const result = Sheet.read('config');
+    
+    // แปลงเป็น object สำหรับอ่านง่าย
+    const configObj = {};
+    result.rows.forEach(function(row) {
+      configObj[row.key] = row.value;
+    });
+    
+    return Helpers_response(true, {
+      list: result.rows,
+      object: configObj
+    }, 'Config retrieved');
+    
+  } catch (error) {
+    Logger.log('Helpers_getAllConfig error: ' + error.toString());
+    return Helpers_response(false, null, 'Failed to get config');
+  }
+}
+
+// ====================================
 // EXPORT (สำหรับเรียกใช้จากไฟล์อื่น)
 // ====================================
 
@@ -178,5 +296,9 @@ const Helpers = {
   validateId13: Helpers_validateId13,
   validateEmail: Helpers_validateEmail,
   validatePassword: Helpers_validatePassword,
-  response: Helpers_response
+  response: Helpers_response,
+  getConfig: Helpers_getConfig,
+  setConfig: Helpers_setConfig,
+  deleteConfig: Helpers_deleteConfig,
+  getAllConfig: Helpers_getAllConfig
 };
