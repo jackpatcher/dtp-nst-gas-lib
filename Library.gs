@@ -130,9 +130,9 @@ function Connection(tokenData, appData) {
     user_type: tokenData.user_type,
     user_id: tokenData.user_id,
     user_identifier: tokenData.user_identifier,
-    org_id: tokenData.org_id,
+    hrms_id: tokenData.hrms_id,
     app_key: appData.app_key,
-    app_name: appData.appname
+    app_name: appData.app_name
   };
   
   // Success flag
@@ -150,7 +150,7 @@ function Connection(tokenData, appData) {
    *   name: 'John Doe',
    *   id13: '1234567890123',
    *   password: 'password123',
-   *   org_id: 'org-uuid-123'
+   *   hrms_id: 'org-uuid-123'
    * });
    */
   this.create = function(tableName, data) {

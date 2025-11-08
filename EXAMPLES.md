@@ -139,7 +139,7 @@ function exampleConnect() {
   // 3. ดูข้อมูล session
   const info = conn.info();
   Logger.log('Connected as:', info.data.user_type);
-  Logger.log('Organization:', info.data.org_id);
+  Logger.log('Organization HRMS ID:', info.data.hrms_id);
   
   return conn;
 }
@@ -162,9 +162,9 @@ function exampleAdminFullCRUD() {
   // 1. สร้าง Organization
   Logger.log('\n1. Creating organization...');
   const org = conn.create('organizations', {
-    org_name: 'กรมสมเด็จพระเจ้าตากสินมหาราช',
     hrms_id: 'E6900000',
     dmz_id: 'DMZ001',
+    org_name: 'กรมสมเด็จพระเจ้าตากสินมหาราช',
     subdistrict: 'คลองตัน',
     district: 'คลองเตย',
     province: 'กรุงเทพมหานคร'
@@ -174,18 +174,16 @@ function exampleAdminFullCRUD() {
   // 2. สร้าง Position
   Logger.log('\n2. Creating position...');
   const position = conn.create('positions', {
-    name: 'นักวิชาการคอมพิวเตอร์',
-    description: 'ตำแหน่งนักวิชาการคอมพิวเตอร์',
-    level: 5
+    position_id: 'P001',
+    name: 'นักวิชาการคอมพิวเตอร์'
   });
   Logger.log('Position:', position.data.uuid);
   
   // 3. สร้าง Rank
   Logger.log('\n3. Creating rank...');
   const rank = conn.create('ranks', {
-    name: 'ชำนาญการ',
-    abbreviation: 'ชก.',
-    level: 7
+    rank_id: 'R007',
+    name: 'ชำนาญการ'
   });
   Logger.log('Rank:', rank.data.uuid);
   
@@ -197,7 +195,7 @@ function exampleAdminFullCRUD() {
     password: 'user123456',
     position_id: position.data.uuid,
     rank_id: rank.data.uuid,
-    org_id: org.data.uuid
+    hrms_id: org.data.hrms_id
   });
   Logger.log('User:', user.data.uuid);
   

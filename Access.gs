@@ -42,7 +42,7 @@ const ACCESS_RULES = {
 /**
  * ตรวจสอบว่าสามารถสร้างข้อมูลได้หรือไม่
  * @param {string} tableName - ชื่อตาราง
- * @param {Object} session - ข้อมูล session (user_type, org_id)
+ * @param {Object} session - ข้อมูล session (user_type, hrms_id)
  * @returns {boolean}
  */
 function Access_canCreate(tableName, session) {
@@ -134,9 +134,9 @@ function Access_filterData(tableName, session, rows) {
   }
   
   // ถ้าอ่านได้เฉพาะองค์กรตัวเอง
-  if (readPermission === 'own_org' && session.org_id) {
+  if (readPermission === 'own_org' && session.hrms_id) {
     return rows.filter(function(row) {
-      return row.org_id === session.org_id;
+      return row.hrms_id === session.hrms_id;
     });
   }
   

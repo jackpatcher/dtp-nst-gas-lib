@@ -134,10 +134,10 @@ function initializeDefaultConfig() {
  *   Logger.log(result);
  * }
  */
-function createFirstAdmin(username, password, name) {
+function createFirstAdmin(username, password, fullName, email) {
   try {
     // ตรวจสอบ input
-    if (!username || !password || !name) {
+    if (!username || !password || !fullName) {
       return Helpers.response(false, null, 'Username, password, and name are required');
     }
     
@@ -147,15 +147,20 @@ function createFirstAdmin(username, password, name) {
       return Helpers.response(false, null, 'Admin with this username already exists');
     }
     
+    // แยกชื่อ-นามสกุล (ถ้าไม่มีช่องว่าง ใช้ชื่อเดียวทั้งหมด)
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0] || fullName;
+    const lastName = nameParts.slice(1).join(' ') || '-';
+    
     // สร้าง admin
     const adminData = {
-      uuid: Helpers.uuid(),
+      uuid: Helpers.generateUUID(),
       username: username,
       password: Helpers.hashPassword(password),
-      name: name,
-      role: 'SUPER_ADMIN',
-      active: true,
-      last_login: null,
+      email: email || username + '@example.com',
+      first_name: firstName,
+      last_name: lastName,
+      status: 'active',
       created_at: Helpers.now(),
       updated_at: Helpers.now()
     };
@@ -172,7 +177,13 @@ function createFirstAdmin(username, password, name) {
     
     return Helpers.response(
       true,
-      { uuid: adminData.uuid, username: username, name: name },
+      { 
+        uuid: adminData.uuid, 
+        username: username, 
+        first_name: firstName,
+        last_name: lastName,
+        email: adminData.email
+      },
       'Admin created successfully'
     );
     
@@ -197,29 +208,28 @@ function createFirstAdmin(username, password, name) {
  *   Logger.log('App Key:', result.data.app_key);
  * }
  */
-function registerApp(appname, description, createdBy) {
+function registerApp(appName, description) {
   try {
-    if (!appname) {
+    if (!appName) {
       return Helpers.response(false, null, 'App name is required');
     }
     
     // ตรวจสอบว่ามี app ชื่อนี้อยู่แล้วหรือไม่
-    const existing = Sheet.read('applications', { appname: appname });
+    const existing = Sheet.read('applications', { app_name: appName });
     if (existing.rows.length > 0) {
       return Helpers.response(false, null, 'Application with this name already exists');
     }
     
-    // สร้าง app key
+    // สร้าง app key และ secret
     const appKey = Helpers.generateAppKey();
+    const appSecret = Helpers.generateToken();
     
     const appData = {
-      uuid: Helpers.uuid(),
-      appname: appname,
+      uuid: Helpers.generateUUID(),
+      app_name: appName,
       app_key: appKey,
-      description: description || '',
-      callback_url: '',
-      active: true,
-      created_by: createdBy || '',
+      app_secret: appSecret,
+      status: 'active',
       created_at: Helpers.now(),
       updated_at: Helpers.now()
     };
@@ -231,17 +241,19 @@ function registerApp(appname, description, createdBy) {
     }
     
     Logger.log('✅ Application registered successfully!');
-    Logger.log('App Name: ' + appname);
+    Logger.log('App Name: ' + appName);
     Logger.log('App Key: ' + appKey);
+    Logger.log('App Secret: ' + appSecret);
     Logger.log('UUID: ' + appData.uuid);
-    Logger.log('⚠️  IMPORTANT: Save this App Key securely!');
+    Logger.log('⚠️  IMPORTANT: Save these credentials securely!');
     
     return Helpers.response(
       true,
       {
         uuid: appData.uuid,
-        appname: appname,
-        app_key: appKey
+        app_name: appName,
+        app_key: appKey,
+        app_secret: appSecret
       },
       'Application registered successfully'
     );
@@ -482,19 +494,33 @@ function getStatistics() {
       applications: { total: 0, active: 0, inactive: 0 },
       tokens: { total: 0, active: 0, expired: 0, revoked: 0 },
       logs: { total: 0, today: 0 },
-      organizations: { total: 0, active: 0 },
-      positions: { total: 0, active: 0 },
-      ranks: { total: 0, active: 0 }
+      organizations: { total: 0 },
+      positions: { total: 0 },
+      ranks: { total: 0 }
     };
     
-    const tables = ['users', 'admins', 'applications', 'organizations', 'positions', 'ranks'];
+    // Users (มี active field)
+    const users = Sheet.read('users').rows;
+    stats.users.total = users.length;
+    stats.users.active = users.filter(function(row) { return row.active === true; }).length;
+    stats.users.inactive = stats.users.total - stats.users.active;
     
-    tables.forEach(function(table) {
-      const allData = Sheet.read(table).rows;
-      stats[table].total = allData.length;
-      stats[table].active = allData.filter(function(row) { return row.active; }).length;
-      stats[table].inactive = stats[table].total - stats[table].active;
-    });
+    // Admins (ใช้ status)
+    const admins = Sheet.read('admins').rows;
+    stats.admins.total = admins.length;
+    stats.admins.active = admins.filter(function(row) { return row.status === 'active'; }).length;
+    stats.admins.inactive = stats.admins.total - stats.admins.active;
+    
+    // Applications (ใช้ status)
+    const apps = Sheet.read('applications').rows;
+    stats.applications.total = apps.length;
+    stats.applications.active = apps.filter(function(row) { return row.status === 'active'; }).length;
+    stats.applications.inactive = stats.applications.total - stats.applications.active;
+    
+    // Organizations, Positions, Ranks (ไม่มี active/status field)
+    stats.organizations.total = Sheet.read('organizations').rows.length;
+    stats.positions.total = Sheet.read('positions').rows.length;
+    stats.ranks.total = Sheet.read('ranks').rows.length;
     
     // Token stats
     const tokens = Sheet.read('tokens').rows;
@@ -508,13 +534,13 @@ function getStatistics() {
     }).length;
     stats.tokens.revoked = tokens.filter(function(t) { return t.revoked; }).length;
     
-    // Log stats
+    // Log stats (ใช้ timestamp แทน created_at)
     const logs = Sheet.read('logs').rows;
     stats.logs.total = logs.length;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     stats.logs.today = logs.filter(function(log) {
-      const logDate = new Date(log.created_at);
+      const logDate = new Date(log.timestamp);
       return logDate >= today;
     }).length;
     

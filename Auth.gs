@@ -3,7 +3,20 @@
  * ระบบ Authentication และ Token Management
  * 
  * ไม่ใช้ IIFE - เข้าใจง่าย อ่านง่าย
- * รวม Token Management เข้าด้วยกัน (ไม่แยกเป็น module อีก)
+ * รวม Token Management เข้าด้วยกัน (    const tokenData = {
+      uuid: Helpers.generateUUID(),
+      token: token,
+      user_type: userType,
+      user_id: user.uuid,
+      user_identifier: userType === 'admin' ? user.username : user.id13,
+      app_key: '', // จะถูกตั้งค่าตอน connect
+      hrms_id: user.hrms_id || null,
+      expires_at: expiresAt.toISOString(),
+      revoked: false,
+      revoked_at: null,
+      last_used: Helpers.now(),
+      created_at: Helpers.now()
+    };ule อีก)
  */
 
 // ====================================
@@ -48,31 +61,55 @@ function _loginAdmin(credentials) {
     return Helpers.response(false, null, 'Username required');
   }
   
-  // ค้นหา admin
-  const result = Sheet.read('admins', { username: username });
-  
-  if (result.rows.length === 0) {
-    return Helpers.response(false, null, 'Admin not found');
+  // ตรวจสอบ rate limit
+  const rateLimit = Security.checkRateLimit(username, 'LOGIN');
+  if (!rateLimit.allowed) {
+    return Helpers.response(false, null, rateLimit.message);
   }
   
-  const admin = result.rows[0];
+  // ลอง cache ก่อน (เฉพาะข้อมูลพื้นฐาน ไม่รวม password)
+  let admin = Cache.getAdmin(username);
+  
+  // ถ้าไม่มี cache หรือต้องการ verify password ต้อง query
+  if (!admin) {
+    const result = Sheet.read('admins', { username: username });
+    
+    if (result.rows.length === 0) {
+      return Helpers.response(false, null, 'Admin not found');
+    }
+    
+    admin = result.rows[0];
+  } else {
+    // ถ้ามี cache ต้อง query เพื่อเอา password มา verify
+    const result = Sheet.read('admins', { username: username });
+    if (result.rows.length > 0) {
+      admin = result.rows[0];
+    }
+  }
   
   // ตรวจสอบสถานะ
-  if (!admin.active) {
+  if (admin.status !== 'active') {
     return Helpers.response(false, null, 'Account is inactive');
   }
   
   // ตรวจสอบรหัสผ่าน
   const hashedPassword = Helpers.hashPassword(password);
   if (admin.password !== hashedPassword) {
+    // Login ล้มเหลว - ไม่ reset rate limit
     return Helpers.response(false, null, 'Invalid credentials');
   }
   
-  // อัปเดต last_login
-  Sheet.updateField('admins', admin.uuid, 'last_login', Helpers.now());
+  // Login สำเร็จ - reset rate limit
+  Security.resetRateLimit(username, 'LOGIN');
   
-  // ลบ password ออกจาก response
+  // อัปเดต updated_at (ไม่มี last_login field แล้ว)
+  Sheet.updateField('admins', admin.uuid, 'updated_at', Helpers.now());
+  
+  // ลบ password ออกจาก response และ cache
   delete admin.password;
+  
+  // Cache admin data (ไม่รวม password)
+  Cache.setAdmin(username, admin);
   
   return Helpers.response(true, admin, 'Login successful');
 }
@@ -94,14 +131,31 @@ function _loginUser(credentials) {
     return Helpers.response(false, null, 'Invalid ID13 format');
   }
   
-  // ค้นหา user
-  const result = Sheet.read('users', { id13: id13 });
-  
-  if (result.rows.length === 0) {
-    return Helpers.response(false, null, 'User not found');
+  // ตรวจสอบ rate limit
+  const rateLimit = Security.checkRateLimit(id13, 'LOGIN');
+  if (!rateLimit.allowed) {
+    return Helpers.response(false, null, rateLimit.message);
   }
   
-  const user = result.rows[0];
+  // ลอง cache ก่อน
+  let user = Cache.getUser(id13);
+  
+  // ถ้าไม่มี cache หรือต้องการ verify password ต้อง query
+  if (!user) {
+    const result = Sheet.read('users', { id13: id13 });
+    
+    if (result.rows.length === 0) {
+      return Helpers.response(false, null, 'User not found');
+    }
+    
+    user = result.rows[0];
+  } else {
+    // ถ้ามี cache ต้อง query เพื่อเอา password มา verify
+    const result = Sheet.read('users', { id13: id13 });
+    if (result.rows.length > 0) {
+      user = result.rows[0];
+    }
+  }
   
   // ตรวจสอบสถานะ
   if (!user.active) {
@@ -111,11 +165,18 @@ function _loginUser(credentials) {
   // ตรวจสอบรหัสผ่าน
   const hashedPassword = Helpers.hashPassword(password);
   if (user.password !== hashedPassword) {
+    // Login ล้มเหลว - ไม่ reset rate limit
     return Helpers.response(false, null, 'Invalid credentials');
   }
   
+  // Login สำเร็จ - reset rate limit
+  Security.resetRateLimit(id13, 'LOGIN');
+  
   // ลบ password ออกจาก response
   delete user.password;
+  
+  // Cache user data (ไม่รวม password)
+  Cache.setUser(id13, user);
   
   return Helpers.response(true, user, 'Login successful');
 }
@@ -132,17 +193,25 @@ function _loginUser(credentials) {
  */
 function Auth_createToken(user, userType) {
   try {
+    // ตรวจสอบ rate limit
+    const identifier = userType === 'admin' ? user.username : user.id13;
+    const rateLimit = Security.checkRateLimit(identifier, 'TOKEN_CREATE');
+    
+    if (!rateLimit.allowed) {
+      throw new Error(rateLimit.message);
+    }
+    
     const token = Helpers.generateToken();
     const expiresAt = Helpers.expiresIn24Hours();
     
     const tokenData = {
-      uuid: Helpers.uuid(),
+      uuid: Helpers.generateUUID(),
       token: token,
       user_type: userType,
       user_id: user.uuid,
-      user_identifier: userType === 'admin' ? user.username : user.id13,
+      user_identifier: identifier,
       app_key: '', // จะถูกตั้งค่าตอน connect
-      org_id: user.org_id || null,
+      hrms_id: user.hrms_id || null,
       expires_at: expiresAt.toISOString(),
       revoked: false,
       revoked_at: null,
@@ -151,6 +220,9 @@ function Auth_createToken(user, userType) {
     };
     
     Sheet.append('tokens', tokenData);
+    
+    // Cache token
+    Cache.setToken(token, tokenData);
     
     return {
       token: token,
@@ -175,23 +247,34 @@ function Auth_validateToken(token, appKey) {
       return Helpers.response(false, null, 'Token required');
     }
     
-    // ค้นหา token
-    const result = Sheet.read('tokens', { token: token });
-    
-    if (result.rows.length === 0) {
-      return Helpers.response(false, null, 'Invalid token');
+    // ตรวจสอบ token format
+    if (!Security.validateTokenFormat(token)) {
+      return Helpers.response(false, null, 'Invalid token format');
     }
     
-    const tokenData = result.rows[0];
+    // ลอง cache ก่อน
+    let tokenData = Cache.getToken(token);
+    
+    // ถ้าไม่มี cache ต้อง query
+    if (!tokenData) {
+      const result = Sheet.read('tokens', { token: token });
+      
+      if (result.rows.length === 0) {
+        return Helpers.response(false, null, 'Invalid token');
+      }
+      
+      tokenData = result.rows[0];
+    }
     
     // ตรวจสอบว่าถูก revoke หรือไม่
     if (tokenData.revoked) {
+      Cache.remove(Cache.tokenKey(token)); // ลบ cache
       return Helpers.response(false, null, 'Token has been revoked');
     }
     
     // ตรวจสอบว่าหมดอายุหรือไม่
-    const expiresAt = new Date(tokenData.expires_at);
-    if (expiresAt < new Date()) {
+    if (Security.isTokenExpired(tokenData.expires_at)) {
+      Cache.remove(Cache.tokenKey(token)); // ลบ cache
       return Helpers.response(false, null, 'Token has expired');
     }
     
@@ -199,10 +282,20 @@ function Auth_validateToken(token, appKey) {
     if (!tokenData.app_key && appKey) {
       Sheet.updateField('tokens', tokenData.uuid, 'app_key', appKey);
       tokenData.app_key = appKey;
+      Cache.setToken(token, tokenData); // อัปเดต cache
     }
     
-    // อัปเดต last_used
-    Sheet.updateField('tokens', tokenData.uuid, 'last_used', Helpers.now());
+    // อัปเดต last_used (ไม่บ่อยเกินไป)
+    const lastUsed = new Date(tokenData.last_used);
+    const now = new Date();
+    const diffMinutes = (now - lastUsed) / 1000 / 60;
+    
+    // อัปเดตทุก 5 นาที เพื่อลด write operations
+    if (diffMinutes > 5) {
+      Sheet.updateField('tokens', tokenData.uuid, 'last_used', Helpers.now());
+      tokenData.last_used = Helpers.now();
+      Cache.setToken(token, tokenData); // อัปเดต cache
+    }
     
     return Helpers.response(true, tokenData, 'Valid token');
     
@@ -231,6 +324,9 @@ function Auth_revokeToken(token) {
       revoked: true,
       revoked_at: Helpers.now()
     });
+    
+    // ลบจาก cache
+    Cache.remove(Cache.tokenKey(token));
     
     return Helpers.response(true, null, 'Token revoked successfully');
     
@@ -310,7 +406,7 @@ function Auth_validateAppKey(appKey) {
     const app = result.rows[0];
     
     // ตรวจสอบสถานะ
-    if (!app.active) {
+    if (app.status !== 'active') {
       return Helpers.response(false, null, 'Application is inactive');
     }
     

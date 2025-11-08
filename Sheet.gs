@@ -14,14 +14,14 @@ let _spreadsheetCache = null;
 
 const SHEET_SCHEMA = {
   config: ['key', 'value', 'description', 'updated_at'],
-  users: ['uuid', 'name', 'id13', 'password', 'position_id', 'rank_id', 'org_id', 'active', 'created_at', 'updated_at'],
-  organizations: ['uuid', 'hrms_id', 'dmz_id', 'org_name', 'subdistrict', 'district', 'province', 'active', 'created_at', 'updated_at'],
-  positions: ['uuid', 'name', 'description', 'level', 'active', 'created_at', 'updated_at'],
-  ranks: ['uuid', 'name', 'abbreviation', 'level', 'active', 'created_at', 'updated_at'],
-  logs: ['uuid', 'user_id13', 'action', 'table_name', 'record_id', 'status', 'app_id', 'ip_address', 'details', 'created_at'],
-  admins: ['uuid', 'username', 'password', 'name', 'role', 'active', 'last_login', 'created_at', 'updated_at'],
-  applications: ['uuid', 'appname', 'app_key', 'description', 'callback_url', 'active', 'created_by', 'created_at', 'updated_at'],
-  tokens: ['uuid', 'token', 'user_type', 'user_id', 'user_identifier', 'app_key', 'org_id', 'expires_at', 'revoked', 'revoked_at', 'last_used', 'created_at']
+  users: ['uuid', 'name', 'id13', 'password', 'position_id', 'rank_id', 'hrms_id', 'active', 'created_at', 'updated_at'],
+  organizations: ['uuid', 'hrms_id', 'dmz_id', 'org_name', 'subdistrict', 'district', 'province', 'created_at', 'updated_at'],
+  positions: ['uuid', 'position_id', 'name', 'created_at', 'updated_at'],
+  ranks: ['uuid', 'rank_id', 'name', 'created_at', 'updated_at'],
+  logs: ['uuid', 'action', 'table_name', 'record_id', 'user_id', 'user_type', 'timestamp', 'details'],
+  admins: ['uuid', 'username', 'password', 'email', 'first_name', 'last_name', 'status', 'created_at', 'updated_at'],
+  applications: ['uuid', 'app_name', 'app_key', 'app_secret', 'status', 'created_at', 'updated_at'],
+  tokens: ['uuid', 'token', 'user_type', 'user_id', 'user_identifier', 'app_key', 'hrms_id', 'expires_at', 'revoked', 'revoked_at', 'last_used', 'created_at']
 };
 
 // ====================================
@@ -309,16 +309,14 @@ function Sheet_initializeAll() {
 function Sheet_log(logData) {
   try {
     const logEntry = {
-      uuid: Helpers.uuid(),
-      user_id13: logData.user_id13 || '',
+      uuid: Helpers.generateUUID(),
       action: logData.action || '',
       table_name: logData.table_name || '',
       record_id: logData.record_id || '',
-      status: logData.status || 'SUCCESS',
-      app_id: logData.app_id || '',
-      ip_address: logData.ip_address || '',
-      details: logData.details || '',
-      created_at: Helpers.now()
+      user_id: logData.user_id || '',
+      user_type: logData.user_type || '',
+      timestamp: Helpers.now(),
+      details: logData.details || ''
     };
     
     Sheet_append('logs', logEntry);

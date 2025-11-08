@@ -137,7 +137,7 @@ if (conn.success === false) {
 // ดูข้อมูล session
 const info = conn.info();
 Logger.log('User Type:', info.data.user_type);
-Logger.log('Org ID:', info.data.org_id);
+Logger.log('HRMS ID:', info.data.hrms_id);
 ```
 
 ### ✏️ 3. CREATE (สร้างข้อมูล)
@@ -145,11 +145,12 @@ Logger.log('Org ID:', info.data.org_id);
 ```javascript
 // สร้าง Organization
 const org = conn.create('organizations', {
-  org_name: 'กรมสมเด็จพระเจ้าตากสินมหาราช',
   hrms_id: 'E6900000',
-  province: 'กรุงเทพมหานคร',
+  dmz_id: 'DMZ001',
+  org_name: 'กรมสมเด็จพระเจ้าตากสินมหาราช',
+  subdistrict: 'คลองตัน',
   district: 'คลองเตย',
-  subdistrict: 'คลองตัน'
+  province: 'กรุงเทพมหานคร'
 });
 
 // สร้าง User
@@ -157,7 +158,7 @@ const user = conn.create('users', {
   name: 'สมชาย ใจดี',
   id13: '1234567890123',
   password: 'user123456',
-  org_id: org.data.uuid,
+  hrms_id: org.data.hrms_id,
   position_id: 'position-uuid',
   rank_id: 'rank-uuid'
 });

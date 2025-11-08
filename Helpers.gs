@@ -17,6 +17,14 @@ function Helpers_uuid() {
   return Utilities.getUuid();
 }
 
+/**
+ * สร้าง UUID v4 (alias สำหรับความชัดเจน)
+ * @returns {string} UUID
+ */
+function Helpers_generateUUID() {
+  return Utilities.getUuid();
+}
+
 // ====================================
 // PASSWORD HASHING
 // ====================================
@@ -288,6 +296,7 @@ function Helpers_getAllConfig() {
 
 const Helpers = {
   uuid: Helpers_uuid,
+  generateUUID: Helpers_generateUUID,
   hashPassword: Helpers_hashPassword,
   generateToken: Helpers_generateToken,
   generateAppKey: Helpers_generateAppKey,
