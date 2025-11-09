@@ -30,27 +30,16 @@ function Helpers_generateUUID() {
 // ====================================
 
 /**
- * เข้ารหัสรหัสผ่านด้วย SHA-256
+ * เข้ารหัสรหัสผ่านแบบง่ายและเร็ว
  * @param {string} password - รหัสผ่าน
  * @returns {string} รหัสผ่านที่เข้ารหัสแล้ว
  */
 function Helpers_hashPassword(password) {
   if (!password) return '';
   
+  // แบบง่ายที่สุด - เร็วมาก
   const salt = 'dtp-nst-2025';
-  const combined = password + salt;
-  
-  const hash = Utilities.computeDigest(
-    Utilities.DigestAlgorithm.SHA_256,
-    combined,
-    Utilities.Charset.UTF_8
-  );
-  
-  // Convert to hex string
-  return hash.map(function(byte) {
-    const v = (byte < 0) ? 256 + byte : byte;
-    return ('0' + v.toString(16)).slice(-2);
-  }).join('');
+  return Utilities.base64Encode(password + salt);
 }
 
 // ====================================
