@@ -2,11 +2,8 @@
  * Sheet.gs
  * จัดการ Google Sheets (Database Layer)
  * 
- * ไม่ใช้ IIFE - เข้าใจง่าย อ่านง่าย
+ * Simple Mode - ไม่มี cache, เข้าถึงโดยตรง
  */
-
-// Cache
-let _spreadsheetCache = null;
 
 // ====================================
 // SCHEMA DEFINITION
@@ -33,31 +30,14 @@ const SHEET_SCHEMA = {
  * @returns {Spreadsheet} Google Spreadsheet object
  */
 function Sheet_getSpreadsheet() {
-  if (_spreadsheetCache) {
-    return _spreadsheetCache;
-  }
-  
   // ใช้ Config.SPREADSHEET_ID แทน
   // ถ้ามี SPREADSHEET_ID ใช้ openById
   // ถ้าไม่มี (ว่างเปล่า) ใช้ active spreadsheet สำหรับทดสอบ local
   if (Config.SPREADSHEET_ID) {
-    _spreadsheetCache = SpreadsheetApp.openById(Config.SPREADSHEET_ID);
+    return SpreadsheetApp.openById(Config.SPREADSHEET_ID);
   } else {
-    _spreadsheetCache = SpreadsheetApp.getActiveSpreadsheet();
+    return SpreadsheetApp.getActiveSpreadsheet();
   }
-  
-  if (!_spreadsheetCache) {
-    throw new Error('No spreadsheet found. Please set SPREADSHEET_ID in Config.gs');
-  }
-  
-  return _spreadsheetCache;
-}
-
-/**
- * Clear cache (ใช้เมื่อต้องการ refresh)
- */
-function Sheet_clearCache() {
-  _spreadsheetCache = null;
 }
 
 /**
@@ -348,7 +328,6 @@ function Sheet_log(logData) {
 
 const Sheet = {
   getSpreadsheet: Sheet_getSpreadsheet,
-  clearCache: Sheet_clearCache,
   getSheet: Sheet_getSheet,
   read: Sheet_read,
   findByUUID: Sheet_findByUUID,

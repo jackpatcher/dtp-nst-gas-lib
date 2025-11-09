@@ -27,17 +27,14 @@ function setupLibrary() {
     Logger.log('Starting library setup...');
     Logger.log('========================================');
     
-    // 1. Clear cache
-    Sheet.clearCache();
-    
-    // 2. สร้าง sheets ทั้งหมด
+    // 1. สร้าง sheets ทั้งหมด
     const result = Sheet.initializeAll();
     
     if (!result.success) {
       return result;
     }
     
-    // 3. สร้าง default config
+    // 2. สร้าง default config
     Logger.log('Setting up default configuration...');
     initializeDefaultConfig();
     

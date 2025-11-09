@@ -62,11 +62,8 @@ URL: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74O
 **2. ปรับตั้งค่าอื่นๆ (ถ้าต้องการ)**
 
 ```javascript
-// Token expiry
-const TOKEN_EXPIRY_HOURS = 24;  // เปลี่ยนเป็น 48 ถ้าต้องการ
-
-// Password hashing
-const PASSWORD_HASH_METHOD = 'base64';  // หรือ 'sha256' ถ้าต้องการความปลอดภัยสูง
+// Token expiry (ถ้าต้องการเปลี่ยน)
+const TOKEN_EXPIRY_HOURS = 24;  // เปลี่ยนเป็น 48 ชม. หรือ 168 ชม. (1 สัปดาห์)
 ```
 
 ---
@@ -78,7 +75,7 @@ const PASSWORD_HASH_METHOD = 'base64';  // หรือ 'sha256' ถ้าต้
 1. สร้าง Google Spreadsheet ใหม่
 2. เมนู: Extensions > Apps Script  
 3. คัดลอกไฟล์ทั้งหมด (.gs) จาก repo มาวาง
-4. แก้ SPREADSHEET_ID ใน Sheet.gs (ตามด้านบน)
+4. แก้ SPREADSHEET_ID ใน Config.gs (ตามด้านบน)
 ```
 
 **2. ติดตั้งระบบ**
