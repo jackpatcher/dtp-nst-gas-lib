@@ -109,24 +109,27 @@ function Sheet_read(tableName, filters) {
   const headers = data[0];
   const rows = [];
   
-  // แปลง array เป็น object
+  // แปลง array เป็น object - ง่ายที่สุด ไม่มีเงื่อนไขซับซ้อน
   for (let i = 1; i < data.length; i++) {
     const row = {};
     
+    // แปลงทุก column เป็น object properties
     for (let j = 0; j < headers.length; j++) {
       row[headers[j]] = data[i][j];
     }
     
-    // กรองตาม filters
+    // เช็ค filter แบบง่ายๆ - เปรียบเทียบตรงๆ ไม่มี trick
     if (filters) {
       let match = true;
       
       for (let key in filters) {
-        if (filters.hasOwnProperty(key)) {
-          if (row[key] != filters[key]) {
-            match = false;
-            break;
-          }
+        // แปลงทั้งสองเป็น string แล้วเปรียบเทียบ (แก้ปัญหา type mismatch)
+        const rowValueStr = String(row[key] || '');
+        const filterValueStr = String(filters[key] || '');
+        
+        if (rowValueStr !== filterValueStr) {
+          match = false;
+          break;
         }
       }
       
@@ -167,18 +170,23 @@ function Sheet_append(tableName, data) {
     const sheet = Sheet_getSheet(tableName);
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     
-    // สร้าง row array ตาม headers
-    const row = headers.map(function(header) {
+    // สร้าง row array ตาม headers - ง่ายที่สุด ไม่มี trick
+    const row = [];
+    for (let i = 0; i < headers.length; i++) {
+      const header = headers[i];
       const value = data[header];
       
-      // แปลง Date object เป็น string
-      if (value instanceof Date) {
-        return value.toISOString();
+      // แปลงค่า
+      if (value === undefined || value === null) {
+        row.push('');
+      } else if (value instanceof Date) {
+        row.push(value.toISOString());
+      } else {
+        row.push(value);
       }
-      
-      return value !== undefined ? value : '';
-    });
+    }
     
+    // เขียนลง sheet แบบตรงไปตรงมา
     sheet.appendRow(row);
     
     return { success: true, message: 'Data appended successfully' };
