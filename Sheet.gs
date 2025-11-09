@@ -8,6 +8,10 @@
 // Cache
 let _spreadsheetCache = null;
 
+// Spreadsheet ID - ตั้งค่าตอน deploy library
+// ⚠️ ต้องเปลี่ยนเป็น ID ของ spreadsheet ที่ใช้เก็บข้อมูล
+const LIBRARY_SPREADSHEET_ID = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID') || null;
+
 // ====================================
 // SCHEMA DEFINITION
 // ====================================
@@ -37,10 +41,16 @@ function Sheet_getSpreadsheet() {
     return _spreadsheetCache;
   }
   
-  _spreadsheetCache = SpreadsheetApp.getActiveSpreadsheet();
+  // ถ้ามี LIBRARY_SPREADSHEET_ID ใช้ของ library
+  // ถ้าไม่มีใช้ active spreadsheet (สำหรับทดสอบ local)
+  if (LIBRARY_SPREADSHEET_ID) {
+    _spreadsheetCache = SpreadsheetApp.openById(LIBRARY_SPREADSHEET_ID);
+  } else {
+    _spreadsheetCache = SpreadsheetApp.getActiveSpreadsheet();
+  }
   
   if (!_spreadsheetCache) {
-    throw new Error('No active spreadsheet found');
+    throw new Error('No spreadsheet found. Please set SPREADSHEET_ID in Script Properties.');
   }
   
   return _spreadsheetCache;
