@@ -11,8 +11,7 @@
 
 - ✅ **เข้าใจง่าย** - ไม่ใช้ IIFE Pattern ซับซ้อน, อ่านโค้ดได้จากบนลงล่าง
 - ✅ **แยกหน้าที่ชัดเจน** - แต่ละไฟล์ทำงานเฉพาะเรื่อง
-- ✅ **ปลอดภัย** - SHA-256 password hashing, Token-based auth (24hr), Rate Limiting
-- ✅ **เร็วมาก** - Cache System ลด query 80%, เร็วขึ้น 85% (400ms → 60ms)
+- ✅ **ปลอดภัย** - SHA-256 password hashing, Token-based auth (24hr)
 - ✅ **จัดการสิทธิ์** - Admin เต็มสิทธิ์, User อ่านเฉพาะองค์กรตัวเอง
 - ✅ **ติดตั้งง่าย** - 3 คำสั่งเสร็จ
 - ✅ **Audit Log** - บันทึกการกระทำทั้งหมด
@@ -25,18 +24,15 @@
 📁 dtp-nst-gas-lib/
 ├── 📄 Helpers.gs          ← ฟังก์ชันช่วยเหลือ (UUID, Hash, Validation)
 ├── 📄 Sheet.gs             ← จัดการ Google Sheets (Database Layer)
-├── 📄 Cache.gs             ← ระบบ Cache (ลด query 80%)
-├── 📄 Security.gs          ← Rate Limiting, Password Security, Validation
 ├── 📄 Access.gs            ← ระบบสิทธิ์ (Authorization)
 ├── 📄 Auth.gs              ← ระบบ Login + Token Management
 ├── 📄 Database.gs          ← CRUD Operations
 ├── 📄 Library.gs           ← Public API (request_token, connect)
 ├── 📄 Setup.gs             ← ฟังก์ชันติดตั้งและบำรุงรักษา
-├── 📄 TEST_SIMPLE.gs       ← ฟังก์ชันทดสอบ
 └── 📄 appsscript.json      ← Config
 ```
 
-**ไฟล์ทั้งหมด: 11 ไฟล์** (เพิ่ม Cache, Security, Test)
+**ไฟล์ทั้งหมด: 8 ไฟล์** (ลดจาก 15+ ไฟล์)
 
 ---
 
@@ -104,43 +100,27 @@ function testLibrary() {
 
 ## 📖 การใช้งาน
 
-### 🔐 1. Authentication (Login)
-
-**⚠️ สำคัญ:** ใช้ **`request_token()`** เท่านั้น สำหรับ login (ไม่ใช่ `Auth.login()`)
+### 🔐 1. Authentication
 
 ```javascript
-// 🔹 Admin Login
-const adminToken = request_token({
+// Admin Login
+const tokenResult = request_token({
   username: 'admin',
-  password: 'admin123'
+  password: 'password123'
 }, 'admin');
 
-if (adminToken.success) {
-  Logger.log('✅ Login สำเร็จ!');
-  Logger.log('Token:', adminToken.token);
-  Logger.log('หมดอายุ:', adminToken.expiresAt);
-  Logger.log('Message:', adminToken.message);
-} else {
-  Logger.log('❌ Login ล้มเหลว:', adminToken.message);
-}
-
-// 🔹 User Login
-const userToken = request_token({
+// User Login
+const tokenResult = request_token({
   id13: '1234567890123',  // เลขบัตรประชาชน 13 หลัก
-  password: 'user123456'
+  password: 'password123'
 }, 'user');
 
-if (userToken.success) {
-  Logger.log('✅ User Login สำเร็จ!');
-  Logger.log('Token:', userToken.token);
-  Logger.log('HRMS ID:', userToken.hrms_id); // จะได้ hrms_id มาด้วย
+// ได้ token มาใช้เชื่อมต่อ
+if (tokenResult.success) {
+  const token = tokenResult.token;
+  const expiresAt = tokenResult.expiresAt; // Token หมดอายุใน 24 ชม.
 }
 ```
-
-**📝 หมายเหตุ:**
-- Token มีอายุ **24 ชั่วโมง**
-- `Auth.login()` เป็น internal function (ใช้สำหรับ debug เท่านั้น)
-- ใช้ `request_token()` สำหรับ production
 
 ### 🔌 2. Connection
 
@@ -330,112 +310,14 @@ function useConfig() {
 
 ---
 
-## ⚡ Performance & Security
+## 🔒 ความปลอดภัย
 
-### � Performance Optimization
-
-**Cache System** - ลดการ query ฐานข้อมูล 80%
-
-```javascript
-// อัตโนมัติ! ไม่ต้องทำอะไร
-// request_token() และ Auth.validateToken() ใช้ cache อัตโนมัติ
-
-// ผลลัพธ์:
-// - Response time: 400ms → 60ms (เร็วขึ้น 85%)
-// - Sheet queries: 20+ → 2-3 (ลดลง 80%)
-// - Cache hit rate: 90%+
-```
-
-**Cache TTL:**
-- User/Admin data: 60 วินาที
-- Reference data: 10 นาที  
-- Config/Organization: 1 ชั่วโมง
-
-**เคลียร์ cache (ถ้าจำเป็น):**
-```javascript
-// เคลียร์ cache user เฉพาะคน
-Cache.remove('user:1234567890123');
-
-// เคลียร์ cache admin
-Cache.remove('admin:admin-username');
-
-// เคลียร์ทั้งหมด (ระวัง!)
-CacheService.getScriptCache().removeAll([]);
-```
-
-### 🔒 Security Features
-
-**1. Rate Limiting** - ป้องกัน Brute Force Attack
-
-```javascript
-// Login: สูงสุด 5 ครั้ง/15 นาที
-// ถ้าเกิน → ถูกบล็อก 30 นาที
-
-// ตัวอย่าง Error Message:
-{
-  "success": false,
-  "message": "Too many login attempts. Please try again in 30 minutes."
-}
-```
-
-**Rate Limits:**
-- Login: 5 attempts / 15 นาที → บล็อก 30 นาที
-- Token Creation: 10 requests / 1 ชั่วโมง
-- API Calls: 100 requests / 1 ชั่วโมง
-
-**2. Password Security**
-
-```javascript
-// SHA-256 + Unique Salt per user
-// ไม่เก็บ plain text password
-// ใช้ Security.hashPassword(password, identifier)
-
-// ตัวอย่าง:
-const hashedPassword = Security.hashPassword('admin123', 'admin');
-// → ได้ hash ที่ไม่ซ้ำกัน แม้ password เดียวกัน
-```
-
-**3. Input Validation**
-
-```javascript
-// Email validation
-Security.validateEmail('user@example.com');  // true
-
-// UUID validation  
-Security.validateUUID('123e4567-e89b-12d3-a456-426614174000');  // true
-
-// Alphanumeric only
-Security.sanitizeAlphanumeric('admin123!@#');  // 'admin123'
-
-// Text (ป้องกัน XSS)
-Security.sanitizeText('<script>alert("xss")</script>');  // แปลงเป็น safe text
-```
-
-**4. Token Format Validation**
-
-```javascript
-// Token ต้องเป็น alphanumeric 64 ตัวอักษร
-// ถ้าไม่ตรง → Reject ทันที ไม่ query database
-
-// ตัวอย่าง:
-Auth.validateToken('invalid-token-format');
-// → { success: false, message: 'Invalid token format' }
-```
-
----
-
-## 🔒 ความปลอดภัย (สรุป)
-
-| Feature | v2.0 | เดิม |
-|---------|------|------|
-| **Password Hashing** | ✅ SHA-256 + Unique Salt | ⚠️ SHA-256 + Global Salt |
-| **Rate Limiting** | ✅ 5 attempts/15min | ❌ ไม่มี |
-| **Token Validation** | ✅ Format + DB check | ⚠️ DB check เท่านั้น |
-| **Input Sanitization** | ✅ XSS Protection | ❌ ไม่มี |
-| **Lockout Mechanism** | ✅ 30 นาที | ❌ ไม่มี |
-| **Cache Security** | ✅ TTL + Auto-clear | ❌ ไม่มี cache |
-
-**Security Score: 9/10** (เพิ่มจาก 3/10)
+- ✅ **Password Hashing**: SHA-256 + Salt
+- ✅ **Token Expiry**: 24 ชั่วโมง
+- ✅ **ID13 Validation**: ตรวจสอบ checksum เลขบัตรประชาชน
+- ✅ **Access Control**: Admin/User roles แยกสิทธิ์ชัดเจน
+- ✅ **Audit Log**: บันทึกทุกการกระทำ
+- ✅ **Soft Delete**: ไม่ลบข้อมูลจริง (ตั้ง active = false)
 
 ---
 
@@ -511,94 +393,9 @@ Helpers.sendEmail('test@example.com', 'Hello', 'Test');
 
 ---
 
-## 🧪 Testing & Debugging
-
-### ทดสอบระบบทั้งหมด
-
-```javascript
-// ฟังก์ชันทดสอบใน TEST_SIMPLE.gs
-testSimple();  // ทดสอบทั้งหมด: สร้าง admin, อ่านข้อมูล, filter, login, token
-```
-
-**ผลลัพธ์ที่ควรได้:**
-```
-=== ทดสอบระบบ ===
-1. ลบข้อมูลเก่า...
-   ✅ เคลียร์แล้ว
-
-2. สร้าง admin...
-   Success: true
-   Message: Data appended successfully
-   ✅ บันทึกสำเร็จ
-
-3. อ่านข้อมูล...
-   จำนวนแถว: 1
-   Username: admin
-   Email: admin@example.com
-   Status: active
-   ✅ อ่านได้
-
-4. ทดสอบ filter...
-   จำนวนแถว: 1
-   Username: admin
-   ✅ Filter ทำงาน
-
-5. ทดสอบ login...
-   Success: true
-   Message: Login successful
-   Username: admin
-   UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-   ✅ Login สำเร็จ
-
-6. ทดสอบ request_token...
-   Success: true
-   Message: Token created successfully
-   Token: abc123xyz...
-   ✅ ได้ token แล้ว
-
-╔════════════════════════╗
-║   ✅ ทดสอบผ่านหมด!   ║
-╚════════════════════════╝
-```
-
-### ทดสอบการอ่าน-เขียน
-
-```javascript
-testReadWrite();  // ทดสอบเฉพาะ Sheet.read() และ Sheet.append()
-```
-
-### สร้าง Admin ใหม่
-
-```javascript
-createAdmin();  // สร้าง admin ด้วย createFirstAdmin()
-```
-
----
-
 ## 🐛 Troubleshooting
 
-### ❌ ปัญหา: "Admin not found" หรือ Login ไม่สำเร็จ
-
-**สาเหตุ:** ไม่มี admin ในระบบ หรือ password ไม่ถูกต้อง
-
-**แก้ไข:**
-```javascript
-// 1. ทดสอบระบบ
-testSimple();
-
-// 2. ถ้ายังไม่ได้ - สร้าง admin ใหม่
-createFirstAdmin('admin', 'admin123', 'System Admin', 'admin@example.com');
-
-// 3. ลอง login อีกครั้ง
-const token = request_token({
-  username: 'admin',
-  password: 'admin123'
-}, 'admin');
-
-Logger.log(token);
-```
-
-### ❌ ปัญหา: "No active spreadsheet found"
+### ปัญหา: "No active spreadsheet found"
 
 **แก้ไข:** ตรวจสอบว่า script ถูก bound กับ spreadsheet
 
@@ -609,19 +406,7 @@ const ss = Sheet.getSpreadsheet();
 Logger.log(ss.getName());
 ```
 
-### ❌ ปัญหา: Sheet.read() ไม่ได้ข้อมูล
-
-**แก้ไข:** ใช้ `testReadWrite()` เพื่อดูข้อมูลดิบ
-
-```javascript
-testReadWrite();
-// จะแสดง:
-// - ข้อมูลดิบจาก getValues()
-// - ผลจาก Sheet.read()
-// - ผลจาก Sheet.read() with filter
-```
-
-### ❌ ปัญหา: "Permission denied"
+### ปัญหา: "Permission denied"
 
 **แก้ไข:** ตรวจสอบสิทธิ์ใน Access.gs
 
@@ -630,23 +415,12 @@ testReadWrite();
 Logger.log(Access.RULES);
 ```
 
-### ❌ ปัญหา: "Token expired"
+### ปัญหา: "Token expired"
 
 **แก้ไข:** Token หมดอายุใน 24 ชม. ขอ token ใหม่
 
 ```javascript
 const newToken = request_token(credentials, userType);
-```
-
-### ❌ ปัญหา: Rate Limit (ถูกบล็อก)
-
-**สาเหตุ:** Login ผิดเกิน 5 ครั้งใน 15 นาที
-
-**แก้ไข:** รอ 30 นาที หรือเคลียร์ cache
-
-```javascript
-// เคลียร์ rate limit (สำหรับ admin เท่านั้น)
-CacheService.getScriptCache().removeAll(['rate_limit:login:admin']);
 ```
 
 ---
