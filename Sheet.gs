@@ -26,18 +26,52 @@ const SHEET_SCHEMA = {
 // ====================================
 
 /**
+ * ตั้งค่า Spreadsheet ID ใน Script Properties
+ * @param {string} spreadsheetId - Spreadsheet ID
+ * @returns {Object} {success: boolean, message: string}
+ */
+function Sheet_setSpreadsheetId(spreadsheetId) {
+  try {
+    PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', spreadsheetId);
+    return { success: true, message: 'Spreadsheet ID saved successfully' };
+  } catch (error) {
+    return { success: false, message: error.toString() };
+  }
+}
+
+/**
  * รับ Spreadsheet ที่ active
  * @returns {Spreadsheet} Google Spreadsheet object
  */
 function Sheet_getSpreadsheet() {
-  // ใช้ Config.SPREADSHEET_ID แทน
-  // ถ้ามี SPREADSHEET_ID ใช้ openById
-  // ถ้าไม่มี (ว่างเปล่า) ใช้ active spreadsheet สำหรับทดสอบ local
-  if (Config.SPREADSHEET_ID) {
-    return SpreadsheetApp.openById(Config.SPREADSHEET_ID);
-  } else {
-    return SpreadsheetApp.getActiveSpreadsheet();
+  // ลำดับความสำคัญ:
+  // 1. จาก Script Properties (ตั้งด้วย Sheet_setSpreadsheetId)
+  // 2. จาก Config.SPREADSHEET_ID (hardcode)
+  // 3. Active Spreadsheet (สำหรับทดสอบ local)
+  
+  // ลองอ่านจาก Script Properties ก่อน
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const savedId = scriptProperties.getProperty('SPREADSHEET_ID');
+  
+  if (savedId) {
+    try {
+      return SpreadsheetApp.openById(savedId);
+    } catch (error) {
+      Logger.log('Cannot open spreadsheet with saved ID: ' + error.toString());
+    }
   }
+  
+  // ถ้าไม่มี หรือเปิดไม่ได้ ใช้ Config.SPREADSHEET_ID
+  if (Config.SPREADSHEET_ID) {
+    try {
+      return SpreadsheetApp.openById(Config.SPREADSHEET_ID);
+    } catch (error) {
+      Logger.log('Cannot open spreadsheet with Config ID: ' + error.toString());
+    }
+  }
+  
+  // สุดท้าย ใช้ active spreadsheet
+  return SpreadsheetApp.getActiveSpreadsheet();
 }
 
 /**
@@ -327,6 +361,7 @@ function Sheet_log(logData) {
 // ====================================
 
 const Sheet = {
+  setSpreadsheetId: Sheet_setSpreadsheetId,
   getSpreadsheet: Sheet_getSpreadsheet,
   getSheet: Sheet_getSheet,
   read: Sheet_read,

@@ -75,25 +75,48 @@ const TOKEN_EXPIRY_HOURS = 24;  // เปลี่ยนเป็น 48 ชม. 
 1. สร้าง Google Spreadsheet ใหม่
 2. เมนู: Extensions > Apps Script  
 3. คัดลอกไฟล์ทั้งหมด (.gs) จาก repo มาวาง
-4. แก้ SPREADSHEET_ID ใน Config.gs (ตามด้านบน)
 ```
 
 **2. ติดตั้งระบบ**
 
 ```javascript
 function install() {
-  // 1. สร้าง sheets ทั้งหมด
+  // 1. สร้าง sheets ทั้งหมด + บันทึก Spreadsheet ID
   setupLibrary();
   
   // 2. สร้าง admin คนแรก
-  const result = createFirstAdmin('admin', 'admin123', 'System Admin', 'admin@example.com');
-  Logger.log(result);
+  createFirstAdmin('admin', 'admin123', 'System Admin', 'admin@example.com');
+  
+  // 3. ลงทะเบียน app
+  const app = registerApp('My App', 'Description');
+  Logger.log('App Key:', app.data.app_key);
 }
 ```
 
 **เมื่อรันเสร็จ จะได้:**
 - ✅ Spreadsheet พร้อม 9 sheets (config, users, admins, organizations, tokens, etc.)
+- ✅ Spreadsheet ID บันทึกใน Script Properties อัตโนมัติ
 - ✅ Admin account (username: `admin`, password: `admin123`)
+
+**3. Deploy as Library**
+
+```
+1. Deploy > New deployment
+2. เลือก "Library"
+3. ตั้ง Description และ Version
+4. คัดลอก Script ID
+```
+
+**4. Share Spreadsheet (⚠️ สำคัญ)**
+
+```
+1. เปิด spreadsheet
+2. กด Share
+3. เพิ่ม email ของคนที่จะใช้ library
+4. ตั้งสิทธิ์เป็น "Viewer" หรือ "Editor"
+```
+
+> 💡 **หมายเหตุ:** ไม่ต้องแก้ `Config.SPREADSHEET_ID` อีกต่อไป! ระบบบันทึก ID อัตโนมัติแล้ว
 
 ---
 

@@ -27,31 +27,41 @@ function setupLibrary() {
     Logger.log('Starting library setup...');
     Logger.log('========================================');
     
-    // 1. สร้าง sheets ทั้งหมด
+    // 1. บันทึก Spreadsheet ID ลง Script Properties
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const spreadsheetId = ss.getId();
+    Sheet.setSpreadsheetId(spreadsheetId);
+    Logger.log('✅ Saved Spreadsheet ID: ' + spreadsheetId);
+    
+    // 2. สร้าง sheets ทั้งหมด
     const result = Sheet.initializeAll();
     
     if (!result.success) {
       return result;
     }
     
-    // 2. สร้าง default config
+    // 3. สร้าง default config
     Logger.log('Setting up default configuration...');
     initializeDefaultConfig();
     
-    // 4. ดึงข้อมูล spreadsheet
-    const ss = Sheet.getSpreadsheet();
-    
     Logger.log('✅ Setup completed successfully!');
     Logger.log('Spreadsheet: ' + ss.getName());
+    Logger.log('Spreadsheet ID: ' + spreadsheetId);
     Logger.log('URL: ' + ss.getUrl());
     Logger.log('========================================');
     Logger.log('Next steps:');
     Logger.log('1. Run: createFirstAdmin("username", "password", "name")');
     Logger.log('2. Run: registerApp("appname", "description")');
+    Logger.log('3. Deploy as Library and share with your team');
     Logger.log('========================================');
     
     return {
       success: true,
+      data: {
+        spreadsheet_id: spreadsheetId,
+        spreadsheet_name: ss.getName(),
+        spreadsheet_url: ss.getUrl()
+      },
       message: 'Library setup completed',
       details: {
         spreadsheet: ss.getName(),
