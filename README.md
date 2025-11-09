@@ -22,6 +22,7 @@
 
 ```
 📁 dtp-nst-gas-lib/
+├── 📄 Config.gs            ← ตั้งค่าทั้งหมด (SPREADSHEET_ID, TOKEN, etc.)
 ├── 📄 Sheet.gs             ← Database Layer (อ่าน/เขียน Google Sheets)
 ├── 📄 Helpers.gs           ← Utility Functions (UUID, Hash, Date)
 ├── 📄 Security.gs          ← Input Validation (ง่ายๆ)
@@ -32,7 +33,7 @@
 └── 📄 Setup.gs             ← Setup Functions
 ```
 
-**ทั้งหมด 8 ไฟล์ - ง่าย ไม่ซับซ้อน**
+**ทั้งหมด 9 ไฟล์ - ง่าย ไม่ซับซ้อน**
 
 ---
 
@@ -42,7 +43,7 @@
 
 **1. ใส่ Spreadsheet ID** (บังคับ)
 
-เปิดไฟล์ `Sheet.gs` แก้บรรทัดที่ 13:
+เปิดไฟล์ `Config.gs` แก้บรรทัดที่ 22:
 
 ```javascript
 const SPREADSHEET_ID = '';  // ⬅️ ว่างเปล่า
@@ -56,6 +57,16 @@ const SPREADSHEET_ID = '1abc...xyz';  // ⬅️ ใส่ ID ของคุณ
 URL: https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                                          ส่วนนี้คือ Spreadsheet ID
+```
+
+**2. ปรับตั้งค่าอื่นๆ (ถ้าต้องการ)**
+
+```javascript
+// Token expiry
+const TOKEN_EXPIRY_HOURS = 24;  // เปลี่ยนเป็น 48 ถ้าต้องการ
+
+// Password hashing
+const PASSWORD_HASH_METHOD = 'base64';  // หรือ 'sha256' ถ้าต้องการความปลอดภัยสูง
 ```
 
 ---

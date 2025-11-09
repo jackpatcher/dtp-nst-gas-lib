@@ -81,12 +81,13 @@ function Helpers_now() {
 }
 
 /**
- * คำนวณเวลาที่หมดอายุ (24 ชั่วโมงจากตอนนี้)
+ * คำนวณเวลาที่หมดอายุ (ตาม Config.TOKEN_EXPIRY_HOURS)
  * @returns {Date} เวลาหมดอายุ
  */
 function Helpers_expiresIn24Hours() {
   const now = new Date();
-  now.setHours(now.getHours() + 24);
+  const hours = Config.TOKEN_EXPIRY_HOURS || 24;
+  now.setHours(now.getHours() + hours);
   return now;
 }
 

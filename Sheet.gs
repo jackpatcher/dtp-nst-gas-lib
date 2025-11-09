@@ -8,10 +8,6 @@
 // Cache
 let _spreadsheetCache = null;
 
-// ⚠️ เปลี่ยน SPREADSHEET_ID นี้เป็นของคุณ
-// หา ID จาก URL: https://docs.google.com/spreadsheets/d/YOUR_ID_HERE/edit
-const SPREADSHEET_ID = '';  // ใส่ ID ของ spreadsheet ที่เก็บข้อมูล
-
 // ====================================
 // SCHEMA DEFINITION
 // ====================================
@@ -41,16 +37,17 @@ function Sheet_getSpreadsheet() {
     return _spreadsheetCache;
   }
   
+  // ใช้ Config.SPREADSHEET_ID แทน
   // ถ้ามี SPREADSHEET_ID ใช้ openById
   // ถ้าไม่มี (ว่างเปล่า) ใช้ active spreadsheet สำหรับทดสอบ local
-  if (SPREADSHEET_ID) {
-    _spreadsheetCache = SpreadsheetApp.openById(SPREADSHEET_ID);
+  if (Config.SPREADSHEET_ID) {
+    _spreadsheetCache = SpreadsheetApp.openById(Config.SPREADSHEET_ID);
   } else {
     _spreadsheetCache = SpreadsheetApp.getActiveSpreadsheet();
   }
   
   if (!_spreadsheetCache) {
-    throw new Error('No spreadsheet found. Please set SPREADSHEET_ID.');
+    throw new Error('No spreadsheet found. Please set SPREADSHEET_ID in Config.gs');
   }
   
   return _spreadsheetCache;
