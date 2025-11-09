@@ -24,11 +24,23 @@ Library จะบันทึก Spreadsheet ID ลงใน **Script Properties
 #### 1. รัน setupLibrary() ในไฟล์ Library
 
 ```javascript
+// วิธีที่ 1: รันใน spreadsheet-bound script (แนะนำ)
 function install() {
   const result = setupLibrary();
   Logger.log(result);
 }
+
+// วิธีที่ 2: ระบุ Spreadsheet ID (ถ้ารันจาก standalone script)
+function installWithId() {
+  const spreadsheetId = '1abc...xyz'; // ใส่ ID ของคุณ
+  const result = setupLibrary(spreadsheetId);
+  Logger.log(result);
+}
 ```
+
+**⚠️ สำคัญ:**
+- ถ้ารันจาก **Extensions > Apps Script** ใน spreadsheet: ใช้ `setupLibrary()` (ไม่ต้องส่ง ID)
+- ถ้ารันจาก **standalone script**: ใช้ `setupLibrary('spreadsheet_id')` (ต้องส่ง ID)
 
 **ฟังก์ชันนี้จะ:**
 - ✅ บันทึก Spreadsheet ID ลง Script Properties อัตโนมัติ
@@ -133,10 +145,19 @@ function setSpreadsheetId() {
 
 ## 🚨 Troubleshooting
 
+### ❌ "Cannot read properties of null (reading 'getId')"
+
+**สาเหตุ:** รัน `setupLibrary()` จาก standalone script โดยไม่ส่ง Spreadsheet ID  
+**แก้ไข:** 
+```javascript
+// ส่ง Spreadsheet ID เข้าไป
+setupLibrary('1abc...xyz');
+```
+
 ### ❌ ยังเกิด error "openById" อยู่
 
 **สาเหตุ:** ยังไม่ได้รัน `setupLibrary()`  
-**แก้ไข:** รัน `setupLibrary()` ในไฟล์ Library ก่อน
+**แก้ไข:** รัน `setupLibrary()` หรือ `setupLibrary('id')` ในไฟล์ Library ก่อน
 
 ### ❌ "You do not have permission to call SpreadsheetApp.openById"
 

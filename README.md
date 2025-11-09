@@ -81,13 +81,14 @@ const TOKEN_EXPIRY_HOURS = 24;  // เปลี่ยนเป็น 48 ชม. 
 
 ```javascript
 function install() {
-  // 1. สร้าง sheets ทั้งหมด + บันทึก Spreadsheet ID
+  // วิธีที่ 1: รันใน spreadsheet-bound script (แนะนำ)
   setupLibrary();
   
-  // 2. สร้าง admin คนแรก
-  createFirstAdmin('admin', 'admin123', 'System Admin', 'admin@example.com');
+  // วิธีที่ 2: ระบุ Spreadsheet ID (ถ้ารันจาก standalone script)
+  // setupLibrary('1abc...xyz');
   
-  // 3. ลงทะเบียน app
+  // สร้าง admin และ app
+  createFirstAdmin('admin', 'admin123', 'System Admin', 'admin@example.com');
   const app = registerApp('My App', 'Description');
   Logger.log('App Key:', app.data.app_key);
 }
@@ -97,6 +98,10 @@ function install() {
 - ✅ Spreadsheet พร้อม 9 sheets (config, users, admins, organizations, tokens, etc.)
 - ✅ Spreadsheet ID บันทึกใน Script Properties อัตโนมัติ
 - ✅ Admin account (username: `admin`, password: `admin123`)
+
+> 💡 **Tips:**
+> - รันจาก **spreadsheet-bound script** (Extensions > Apps Script): `setupLibrary()`
+> - รันจาก **standalone script**: `setupLibrary('your_spreadsheet_id')`
 
 **3. Deploy as Library**
 

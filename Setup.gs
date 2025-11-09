@@ -13,44 +13,89 @@
  * ติดตั้ง library ครั้งแรก
  * สร้าง sheets ทั้งหมดตาม schema
  * 
+ * @param {string} spreadsheetId - Spreadsheet ID (optional, จะใช้ active spreadsheet ถ้าไม่ระบุ)
  * @returns {Object} {success: boolean, message: string, details: Object}
  * 
  * @example
+ * // วิธีที่ 1: รันใน script ที่ bound กับ spreadsheet
  * function runSetup() {
  *   const result = setupLibrary();
  *   Logger.log(result);
  * }
+ * 
+ * // วิธีที่ 2: ระบุ Spreadsheet ID
+ * function runSetupWithId() {
+ *   const result = setupLibrary('1abc...xyz');
+ *   Logger.log(result);
+ * }
  */
-function setupLibrary() {
+function setupLibrary(spreadsheetId) {
   try {
     Logger.log('========================================');
     Logger.log('Starting library setup...');
     Logger.log('========================================');
     
-    // 1. บันทึก Spreadsheet ID ลง Script Properties
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const spreadsheetId = ss.getId();
-    Sheet.setSpreadsheetId(spreadsheetId);
-    Logger.log('✅ Saved Spreadsheet ID: ' + spreadsheetId);
+    let ss;
+    let ssId;
     
-    // 2. สร้าง sheets ทั้งหมด
+    // 1. หา Spreadsheet
+    if (spreadsheetId) {
+      // ถ้าส่ง ID มา ใช้ openById
+      Logger.log('Using provided Spreadsheet ID: ' + spreadsheetId);
+      try {
+        ss = SpreadsheetApp.openById(spreadsheetId);
+        ssId = spreadsheetId;
+      } catch (error) {
+        return {
+          success: false,
+          message: 'Cannot open spreadsheet with ID: ' + spreadsheetId + '. Error: ' + error.toString()
+        };
+      }
+    } else {
+      // ถ้าไม่ส่ง ใช้ active spreadsheet
+      Logger.log('Using active spreadsheet...');
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+      
+      if (!ss) {
+        return {
+          success: false,
+          message: 'No active spreadsheet found. Please run this function from a spreadsheet-bound script or provide spreadsheetId parameter.'
+        };
+      }
+      
+      ssId = ss.getId();
+    }
+    
+    // 2. บันทึก Spreadsheet ID ลง Script Properties
+    Sheet.setSpreadsheetId(ssId);
+    Logger.log('✅ Saved Spreadsheet ID: ' + ssId);
+    
+    // 3. สร้าง sheets ทั้งหมด
     const result = Sheet.initializeAll();
     
     if (!result.success) {
       return result;
     }
     
-    // 3. สร้าง default config
+    // 4. สร้าง default config
     Logger.log('Setting up default configuration...');
     initializeDefaultConfig();
     
     Logger.log('✅ Setup completed successfully!');
     Logger.log('Spreadsheet: ' + ss.getName());
-    Logger.log('Spreadsheet ID: ' + spreadsheetId);
+    Logger.log('Spreadsheet ID: ' + ssId);
     Logger.log('URL: ' + ss.getUrl());
     Logger.log('========================================');
     Logger.log('Next steps:');
     Logger.log('1. Run: createFirstAdmin("username", "password", "name")');
+    Logger.log('2. Run: registerApp("appname", "description")');
+    Logger.log('3. Deploy as Library and share with your team');
+    Logger.log('========================================');
+    
+    return {
+      success: true,
+      data: {
+        spreadsheet_id: ssId,
     Logger.log('2. Run: registerApp("appname", "description")');
     Logger.log('3. Deploy as Library and share with your team');
     Logger.log('========================================');
