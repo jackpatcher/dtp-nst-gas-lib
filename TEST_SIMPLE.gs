@@ -34,8 +34,8 @@ function testSimple() {
   };
   
   const appendResult = Sheet.append('admins', adminData);
-  Logger.log('   Success:', appendResult.success);
-  Logger.log('   Message:', appendResult.message);
+  Logger.log('   Success: ' + appendResult.success);
+  Logger.log('   Message: ' + appendResult.message);
   
   if (!appendResult.success) {
     Logger.log('   ❌ บันทึกไม่สำเร็จ!');
@@ -46,29 +46,29 @@ function testSimple() {
   // 3. อ่านข้อมูล
   Logger.log('3. อ่านข้อมูล...');
   const allAdmins = Sheet.read('admins');
-  Logger.log('   จำนวนแถว:', allAdmins.rows.length);
+  Logger.log('   จำนวนแถว: ' + allAdmins.rows.length);
   
   if (allAdmins.rows.length === 0) {
     Logger.log('   ❌ อ่านไม่ได้ข้อมูล!');
     return;
   }
   
-  Logger.log('   Username:', allAdmins.rows[0].username);
-  Logger.log('   Email:', allAdmins.rows[0].email);
-  Logger.log('   Status:', allAdmins.rows[0].status);
+  Logger.log('   Username: ' + allAdmins.rows[0].username);
+  Logger.log('   Email: ' + allAdmins.rows[0].email);
+  Logger.log('   Status: ' + allAdmins.rows[0].status);
   Logger.log('   ✅ อ่านได้\n');
   
   // 4. ทดสอบ filter
   Logger.log('4. ทดสอบ filter...');
   const filtered = Sheet.read('admins', { username: 'admin' });
-  Logger.log('   จำนวนแถว:', filtered.rows.length);
+  Logger.log('   จำนวนแถว: ' + filtered.rows.length);
   
   if (filtered.rows.length === 0) {
     Logger.log('   ❌ Filter ไม่เจอข้อมูล!');
     return;
   }
   
-  Logger.log('   Username:', filtered.rows[0].username);
+  Logger.log('   Username: ' + filtered.rows[0].username);
   Logger.log('   ✅ Filter ทำงาน\n');
   
   // 5. ทดสอบ login
@@ -78,16 +78,16 @@ function testSimple() {
     password: 'admin123' 
   }, 'admin');
   
-  Logger.log('   Success:', loginResult.success);
-  Logger.log('   Message:', loginResult.message);
+  Logger.log('   Success: ' + loginResult.success);
+  Logger.log('   Message: ' + loginResult.message);
   
   if (!loginResult.success) {
     Logger.log('   ❌ Login ไม่สำเร็จ!');
     return;
   }
   
-  Logger.log('   Username:', loginResult.data.username);
-  Logger.log('   UUID:', loginResult.data.uuid);
+  Logger.log('   Username: ' + loginResult.data.username);
+  Logger.log('   UUID: ' + loginResult.data.uuid);
   Logger.log('   ✅ Login สำเร็จ\n');
   
   // 6. ทดสอบ request_token
@@ -97,15 +97,15 @@ function testSimple() {
     password: 'admin123' 
   }, 'admin');
   
-  Logger.log('   Success:', tokenResult.success);
-  Logger.log('   Message:', tokenResult.message);
+  Logger.log('   Success: ' + tokenResult.success);
+  Logger.log('   Message: ' + tokenResult.message);
   
   if (!tokenResult.success) {
     Logger.log('   ❌ ไม่ได้ token!');
     return;
   }
   
-  Logger.log('   Token:', tokenResult.token.substring(0, 20) + '...');
+  Logger.log('   Token: ' + tokenResult.token.substring(0, 20) + '...');
   Logger.log('   ✅ ได้ token แล้ว\n');
   
   Logger.log('╔════════════════════════╗');
@@ -125,29 +125,29 @@ function testReadWrite() {
   // 1. ข้อมูลดิบ
   Logger.log('1. ข้อมูลดิบ:');
   const rawData = sheet.getDataRange().getValues();
-  Logger.log('   แถวทั้งหมด:', rawData.length);
+  Logger.log('   แถวทั้งหมด: ' + rawData.length);
   
   if (rawData.length > 1) {
-    Logger.log('   Headers:', rawData[0]);
-    Logger.log('   Data[1]:', rawData[1]);
+    Logger.log('   Headers: ' + JSON.stringify(rawData[0]));
+    Logger.log('   Data[1]: ' + JSON.stringify(rawData[1]));
   }
   
   // 2. Sheet.read()
   Logger.log('\n2. Sheet.read():');
   const result = Sheet.read('admins');
-  Logger.log('   rows.length:', result.rows.length);
+  Logger.log('   rows.length: ' + result.rows.length);
   
   if (result.rows.length > 0) {
-    Logger.log('   First row:', JSON.stringify(result.rows[0], null, 2));
+    Logger.log('   First row: ' + JSON.stringify(result.rows[0], null, 2));
   }
   
   // 3. Sheet.read() with filter
   Logger.log('\n3. Sheet.read() with filter:');
   const filtered = Sheet.read('admins', { username: 'admin' });
-  Logger.log('   rows.length:', filtered.rows.length);
+  Logger.log('   rows.length: ' + filtered.rows.length);
   
   if (filtered.rows.length > 0) {
-    Logger.log('   Username:', filtered.rows[0].username);
+    Logger.log('   Username: ' + filtered.rows[0].username);
   }
 }
 
@@ -159,11 +159,11 @@ function createAdmin() {
   
   const result = createFirstAdmin('admin', 'admin123', 'System Admin', 'admin@example.com');
   
-  Logger.log('Success:', result.success);
-  Logger.log('Message:', result.message);
+  Logger.log('Success: ' + result.success);
+  Logger.log('Message: ' + result.message);
   
   if (result.success) {
-    Logger.log('Username:', result.data.username);
-    Logger.log('UUID:', result.data.uuid);
+    Logger.log('Username: ' + result.data.username);
+    Logger.log('UUID: ' + result.data.uuid);
   }
 }
