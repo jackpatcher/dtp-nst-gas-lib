@@ -96,14 +96,6 @@ function setupLibrary(spreadsheetId) {
       success: true,
       data: {
         spreadsheet_id: ssId,
-    Logger.log('2. Run: registerApp("appname", "description")');
-    Logger.log('3. Deploy as Library and share with your team');
-    Logger.log('========================================');
-    
-    return {
-      success: true,
-      data: {
-        spreadsheet_id: spreadsheetId,
         spreadsheet_name: ss.getName(),
         spreadsheet_url: ss.getUrl()
       },
