@@ -65,6 +65,12 @@ function _loginAdmin(credentials) {
   const result = Sheet.read('admins', { username: username });
   
   if (result.rows.length === 0) {
+    // Log failed login - admin not found
+    Sheet.log({
+      action: 'login_failed',
+      user_type: 'admin',
+      details: 'Admin not found: ' + username
+    });
     return Helpers.response(false, null, 'Admin not found');
   }
   
@@ -72,14 +78,36 @@ function _loginAdmin(credentials) {
   
   // ตรวจสอบสถานะ
   if (admin.status !== 'active') {
+    // Log failed login - inactive account
+    Sheet.log({
+      action: 'login_failed',
+      user_type: 'admin',
+      user_id: admin.uuid,
+      details: 'Inactive account: ' + username
+    });
     return Helpers.response(false, null, 'Account is inactive');
   }
   
   // ตรวจสอบรหัสผ่าน
   const hashedPassword = Helpers.hashPassword(password);
   if (admin.password !== hashedPassword) {
+    // Log failed login
+    Sheet.log({
+      action: 'login_failed',
+      user_type: 'admin',
+      user_id: admin.uuid,
+      details: 'Invalid password for username: ' + username
+    });
     return Helpers.response(false, null, 'Invalid credentials');
   }
+  
+  // Log successful login
+  Sheet.log({
+    action: 'login_success',
+    user_type: 'admin',
+    user_id: admin.uuid,
+    details: 'Admin login: ' + username
+  });
   
   // อัปเดต updated_at
   Sheet.updateField('admins', admin.uuid, 'updated_at', Helpers.now());
@@ -111,6 +139,12 @@ function _loginUser(credentials) {
   const result = Sheet.read('users', { id13: id13 });
   
   if (result.rows.length === 0) {
+    // Log failed login - user not found
+    Sheet.log({
+      action: 'login_failed',
+      user_type: 'user',
+      details: 'User not found: ' + id13
+    });
     return Helpers.response(false, null, 'User not found');
   }
   
@@ -118,14 +152,36 @@ function _loginUser(credentials) {
   
   // ตรวจสอบสถานะ
   if (!user.active) {
+    // Log failed login - inactive account
+    Sheet.log({
+      action: 'login_failed',
+      user_type: 'user',
+      user_id: user.uuid,
+      details: 'Inactive account: ' + id13
+    });
     return Helpers.response(false, null, 'Account is inactive');
   }
   
   // ตรวจสอบรหัสผ่าน
   const hashedPassword = Helpers.hashPassword(password);
   if (user.password !== hashedPassword) {
+    // Log failed login
+    Sheet.log({
+      action: 'login_failed',
+      user_type: 'user',
+      user_id: user.uuid,
+      details: 'Invalid password for ID13: ' + id13
+    });
     return Helpers.response(false, null, 'Invalid credentials');
   }
+  
+  // Log successful login
+  Sheet.log({
+    action: 'login_success',
+    user_type: 'user',
+    user_id: user.uuid,
+    details: 'User login: ' + id13
+  });
   
   // ลบ password ออกจาก response
   delete user.password;
@@ -166,6 +222,15 @@ function Auth_createToken(user, userType) {
     
     Sheet.append('tokens', tokenData);
     
+    // Log token creation
+    Sheet.log({
+      action: 'token_created',
+      user_type: userType,
+      user_id: user.uuid,
+      record_id: tokenData.uuid,
+      details: 'Token created for ' + identifier + ', expires: ' + expiresAt.toISOString()
+    });
+    
     return {
       token: token,
       expiresAt: expiresAt.toISOString()
@@ -205,11 +270,27 @@ function Auth_validateToken(token, appKey) {
     
     // ตรวจสอบว่าถูก revoke หรือไม่
     if (tokenData.revoked) {
+      // Log revoked token usage attempt
+      Sheet.log({
+        action: 'token_validation_failed',
+        user_type: tokenData.user_type,
+        user_id: tokenData.user_id,
+        record_id: tokenData.uuid,
+        details: 'Revoked token usage attempt'
+      });
       return Helpers.response(false, null, 'Token has been revoked');
     }
     
     // ตรวจสอบว่าหมดอายุหรือไม่
     if (Security.isTokenExpired(tokenData.expires_at)) {
+      // Log expired token usage attempt
+      Sheet.log({
+        action: 'token_validation_failed',
+        user_type: tokenData.user_type,
+        user_id: tokenData.user_id,
+        record_id: tokenData.uuid,
+        details: 'Expired token usage attempt'
+      });
       return Helpers.response(false, null, 'Token has expired');
     }
     
@@ -248,6 +329,15 @@ function Auth_revokeToken(token) {
     Sheet.update('tokens', tokenData.uuid, {
       revoked: true,
       revoked_at: Helpers.now()
+    });
+    
+    // Log token revocation
+    Sheet.log({
+      action: 'token_revoked',
+      user_type: tokenData.user_type,
+      user_id: tokenData.user_id,
+      record_id: tokenData.uuid,
+      details: 'Token revoked for ' + tokenData.user_identifier
     });
     
     return Helpers.response(true, null, 'Token revoked successfully');
