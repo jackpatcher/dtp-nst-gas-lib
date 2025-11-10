@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจัดการเอกสาร - Admin</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .login-box {
+      background: white;
+      border-radius: 10px;
+      padding: 40px;
+      max-width: 400px;
+      margin: 100px auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    
+    button {
+      padding: 12px 24px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    
+    button:hover {
+      background: #764ba2;
+    }
+    
+    .btn-success {
+      background: #34a853;
+    }
+    
+    .btn-danger {
+      background: #ea4335;
+    }
+    
+    nav {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    
+    #content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      min-height: 400px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+      background: #f8f9fa;
+      font-weight: bold;
+    }
+    
+    .status-pending {
+      color: #ff9800;
+    }
+    
+    .status-approved {
+      color: #34a853;
+    }
+    
+    .status-rejected {
+      color: #ea4335;
+    }
+    
+    .upload-area {
+      border: 2px dashed #ddd;
+      padding: 40px;
+      text-align: center;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    
+    #uploadStatus {
+      margin-top: 20px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login -->
+  <div id="admin-login">
+    <div class="login-box">
+      <h1 style="color:#667eea; text-align:center; margin-bottom:30px;">🔐 Admin Login</h1>
+      <input type="text" id="username" placeholder="Username">
+      <input type="password" id="password" placeholder="Password">
+      <button style="width:100%;" onclick="adminLogin()">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+  
+  <!-- Dashboard -->
+  <div id="admin-dashboard" style="display:none;">
+    <div class="container">
+      <header>
+        <h1>📊 ระบบจัดการเอกสารประวัติข้าราชการ</h1>
+        <p>ยินดีต้อนรับ Admin: <span id="admin-name"></span></p>
+      </header>
+      
+      <nav>
+        <button onclick="showPendingRequests()">📝 คำขอรออนุมัติ</button>
+        <button onclick="showAllRequests()">📋 คำขอทั้งหมด</button>
+        <button onclick="showUploadFiles()">📤 อัพโหลดไฟล์</button>
+        <button onclick="showStatistics()">📊 สถิติ</button>
+        <button onclick="showAdminLogs()">📜 Log การทำงาน</button>
+      </nav>
+      
+      <div id="content"></div>
+    </div>
+  </div>
+  
+  <script>
+    /**
+     * Admin Login
+     */
+    function adminLogin() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      if (!username || !password) {
+        alert('กรุณากรอก Username และ Password');
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(onAdminLoginSuccess)
+        .withFailureHandler(function(error) {
+          alert('เกิดข้อผิดพลาด: ' + error.message);
+        })
+        .adminLogin(username, password);
+    }
+    
+    function onAdminLoginSuccess(result) {
+      if (result.success) {
+        document.getElementById('admin-login').style.display = 'none';
+        document.getElementById('admin-dashboard').style.display = 'block';
+        document.getElementById('admin-name').textContent = result.adminName;
+        showPendingRequests();
+      } else {
+        alert('Login ไม่สำเร็จ: ' + result.message);
+      }
+    }
+    
+    /**
+     * คำขอรออนุมัติ
+     */
+    function showPendingRequests() {
+      showLoading();
+      google.script.run
+        .withSuccessHandler(displayRequests)
+        .getPendingRequests();
+    }
+    
+    function displayRequests(requests) {
+      let html = '<h2>คำขอรออนุมัติ (' + requests.length + ' รายการ)</h2>';
+      
+      if (requests.length === 0) {
+        html += '<p style="text-align:center; color:#666; padding:40px;">ไม่มีคำขอรออนุมัติ</p>';
+      } else {
+        html += '<table>';
+        html += '<tr><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th><th>ประเภท</th><th>วันที่ขอ</th><th>ไฟล์</th><th>การจัดการ</th></tr>';
+        
+        requests.forEach(function(req) {
+          html += '<tr>';
+          html += '<td>' + req.user_id13 + '</td>';
+          html += '<td>' + req.user_name + '</td>';
+          html += '<td>' + req.document_type + '</td>';
+          html += '<td>' + formatDate(req.request_date) + '</td>';
+          html += '<td>' + (req.file_url ? '✅ มีไฟล์' : '❌ ยังไม่มีไฟล์') + '</td>';
+          html += '<td>';
+          
+          if (req.file_url) {
+            html += '<button class="btn-success" onclick="approveRequest(\'' + req.uuid + '\')">อนุมัติ</button> ';
+          } else {
+            html += '<button disabled>รอไฟล์</button> ';
+          }
+          
+          html += '<button class="btn-danger" onclick="rejectRequest(\'' + req.uuid + '\')">ปฏิเสธ</button>';
+          html += '</td>';
+          html += '</tr>';
+        });
+        
+        html += '</table>';
+      }
+      
+      document.getElementById('content').innerHTML = html;
+    }
+    
+    function approveRequest(requestId) {
+      if (confirm('ยืนยันการอนุมัติคำขอนี้?')) {
+        google.script.run
+          .withSuccessHandler(function(result) {
+            alert(result.message);
+            showPendingRequests();
+          })
+          .approveRequest(requestId);
+      }
+    }
+    
+    function rejectRequest(requestId) {
+      const reason = prompt('กรุณาระบุเหตุผลในการปฏิเสธ:');
+      if (reason) {
+        google.script.run
+          .withSuccessHandler(function(result) {
+            alert(result.message);
+            showPendingRequests();
+          })
+          .rejectRequest(requestId, reason);
+      }
+    }
+    
+    /**
+     * อัพโหลดไฟล์
+     */
+    function showUploadFiles() {
+      const html = `
+        <h2>📤 อัพโหลดไฟล์ประวัติข้าราชการ</h2>
+        <div class="upload-area">
+          <h3>อัพโหลดไฟล์หลายรายการพร้อมกัน</h3>
+          <p>รูปแบบชื่อไฟล์: <code>ID13_ชื่อ-สกุล.pdf</code></p>
+          <p>ตัวอย่าง: <code>1234567890123_นายทดสอบ_ระบบ.pdf</code></p>
+          <br>
+          <input type="file" id="fileInput" multiple accept=".pdf" style="margin:20px 0;">
+          <br>
+          <button onclick="uploadFiles()">เริ่มอัพโหลด</button>
+        </div>
+        <div id="uploadStatus"></div>
+      `;
+      
+      document.getElementById('content').innerHTML = html;
+    }
+    
+    function uploadFiles() {
+      const fileInput = document.getElementById('fileInput');
+      const files = fileInput.files;
+      
+      if (files.length === 0) {
+        alert('กรุณาเลือกไฟล์');
+        return;
+      }
+      
+      document.getElementById('uploadStatus').innerHTML = '<p>กำลังอัพโหลด...</p>';
+      uploadFile(files, 0);
+    }
+    
+    function uploadFile(files, index) {
+      if (index >= files.length) {
+        document.getElementById('uploadStatus').innerHTML = 
+          '<p style="color:green; font-weight:bold;">✅ อัพโหลดเสร็จสิ้น ' + files.length + ' ไฟล์</p>';
+        return;
+      }
+      
+      const file = files[index];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const fileData = {
+          name: file.name,
+          mimeType: file.type,
+          content: e.target.result.split(',')[1]
+        };
+        
+        google.script.run
+          .withSuccessHandler(function(result) {
+            const status = document.getElementById('uploadStatus');
+            status.innerHTML += '<p>' + (result.success ? '✅' : '❌') + ' ' + 
+              file.name + ': ' + result.message + '</p>';
+            uploadFile(files, index + 1);
+          })
+          .withFailureHandler(function(error) {
+            const status = document.getElementById('uploadStatus');
+            status.innerHTML += '<p>❌ ' + file.name + ': ' + error.message + '</p>';
+            uploadFile(files, index + 1);
+          })
+          .uploadDocumentFile(fileData);
+      };
+      
+      reader.readAsDataURL(file);
+    }
+    
+    /**
+     * สถิติ
+     */
+    function showStatistics() {
+      showLoading();
+      google.script.run
+        .withSuccessHandler(displayStatistics)
+        .getStatistics();
+    }
+    
+    function displayStatistics(stats) {
+      let html = '<h2>📊 สถิติการขอเอกสาร</h2>';
+      
+      html += '<table style="max-width:500px;">';
+      html += '<tr><th>รายการ</th><th>จำนวน</th></tr>';
+      html += '<tr><td>คำขอทั้งหมด</td><td>' + stats.total + '</td></tr>';
+      html += '<tr><td>รออนุมัติ</td><td class="status-pending">' + stats.pending + '</td></tr>';
+      html += '<tr><td>อนุมัติแล้ว</td><td class="status-approved">' + stats.approved + '</td></tr>';
+      html += '<tr><td>ปฏิเสธ</td><td class="status-rejected">' + stats.rejected + '</td></tr>';
+      html += '<tr><td>ดาวน์โหลดแล้ว</td><td>' + stats.downloaded + '</td></tr>';
+      html += '</table>';
+      
+      html += '<h3 style="margin-top:30px;">จำนวนคำขอแต่ละประเภท</h3>';
+      html += '<table style="max-width:500px;">';
+      for (const type in stats.byType) {
+        html += '<tr><td>' + type + '</td><td>' + stats.byType[type] + '</td></tr>';
+      }
+      html += '</table>';
+      
+      document.getElementById('content').innerHTML = html;
+    }
+    
+    /**
+     * Admin Logs
+     */
+    function showAdminLogs() {
+      showLoading();
+      google.script.run
+        .withSuccessHandler(displayAdminLogs)
+        .getAdminLogs();
+    }
+    
+    function displayAdminLogs(logs) {
+      let html = '<h2>📜 Log การทำงานของเจ้าหน้าที่</h2>';
+      
+      html += '<table>';
+      html += '<tr><th>เวลา</th><th>Admin</th><th>การกระทำ</th><th>รายละเอียด</th></tr>';
+      
+      logs.forEach(function(log) {
+        html += '<tr>';
+        html += '<td>' + formatDate(log.timestamp) + '</td>';
+        html += '<td>' + log.admin_name + '</td>';
+        html += '<td>' + log.action + '</td>';
+        html += '<td>' + log.details + '</td>';
+        html += '</tr>';
+      });
+      
+      html += '</table>';
+      
+      document.getElementById('content').innerHTML = html;
+    }
+    
+    /**
+     * Helper Functions
+     */
+    function showAllRequests() {
+      alert('Feature coming soon!');
+    }
+    
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString('th-TH');
+    }
+    
+    function showLoading() {
+      document.getElementById('content').innerHTML = 
+        '<div style="text-align:center; padding:40px;"><h3>กำลังโหลดข้อมูล...</h3></div>';
+    }
+  </script>
+</body>
+</html>

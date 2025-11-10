@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบขอเอกสารประวัติข้าราชการ</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+    }
+    
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    h2 {
+      color: #444;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    
+    button:hover {
+      background: #764ba2;
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .btn-secondary {
+      background: #34a853;
+    }
+    
+    .btn-secondary:hover {
+      background: #2d8e47;
+    }
+    
+    .welcome-box {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .request-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+      background: #f8f9fa;
+      font-weight: bold;
+    }
+    
+    .status-pending {
+      color: #ff9800;
+      font-weight: bold;
+    }
+    
+    .status-approved {
+      color: #34a853;
+      font-weight: bold;
+    }
+    
+    .status-rejected {
+      color: #ea4335;
+      font-weight: bold;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #667eea;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Login Form -->
+    <div id="login-form">
+      <h1>🏛️ ระบบขอเอกสารประวัติข้าราชการ</h1>
+      <p class="subtitle">กรุณาเข้าสู่ระบบด้วยเลขประจำตัว 13 หลัก</p>
+      
+      <input type="text" id="id13" placeholder="เลขประจำตัว 13 หลัก" maxlength="13">
+      <input type="password" id="password" placeholder="รหัสผ่าน">
+      <button onclick="login()">เข้าสู่ระบบ</button>
+    </div>
+    
+    <!-- Main Page (Hidden initially) -->
+    <div id="main-page" style="display:none;">
+      <div class="welcome-box">
+        <h2>ยินดีต้อนรับ 👤</h2>
+        <h3 id="user-name"></h3>
+      </div>
+      
+      <h3>📋 ขอเอกสาร</h3>
+      <div class="request-buttons">
+        <button onclick="requestDocument('กพ7')">กพ.7</button>
+        <button onclick="requestDocument('กคศ16')">กคศ.16</button>
+      </div>
+      
+      <button class="btn-secondary" onclick="showMyRequests()">ดูคำขอของฉัน</button>
+      
+      <div id="content"></div>
+    </div>
+  </div>
+  
+  <script>
+    /**
+     * Login
+     */
+    function login() {
+      const id13 = document.getElementById('id13').value.trim();
+      const password = document.getElementById('password').value;
+      
+      if (!id13 || id13.length !== 13) {
+        alert('กรุณากรอกเลขประจำตัว 13 หลัก');
+        return;
+      }
+      
+      if (!password) {
+        alert('กรุณากรอกรหัสผ่าน');
+        return;
+      }
+      
+      showLoading('กำลังเข้าสู่ระบบ...');
+      
+      google.script.run
+        .withSuccessHandler(onLoginSuccess)
+        .withFailureHandler(onLoginFailure)
+        .userLogin(id13, password);
+    }
+    
+    function onLoginSuccess(result) {
+      hideLoading();
+      
+      if (result.success) {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('main-page').style.display = 'block';
+        document.getElementById('user-name').textContent = result.userName;
+      } else {
+        alert('เข้าสู่ระบบไม่สำเร็จ: ' + result.message);
+      }
+    }
+    
+    function onLoginFailure(error) {
+      hideLoading();
+      alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+    
+    /**
+     * ขอเอกสาร
+     */
+    function requestDocument(documentType) {
+      if (!confirm('ยืนยันการขอเอกสาร ' + documentType + '?')) {
+        return;
+      }
+      
+      showLoading('กำลังส่งคำขอ...');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          hideLoading();
+          alert(result.message);
+          if (result.success) {
+            showMyRequests();
+          }
+        })
+        .withFailureHandler(function(error) {
+          hideLoading();
+          alert('เกิดข้อผิดพลาด: ' + error.message);
+        })
+        .createDocumentRequest(documentType);
+    }
+    
+    /**
+     * ดูคำขอของฉัน
+     */
+    function showMyRequests() {
+      showLoading('กำลังโหลดข้อมูล...');
+      
+      google.script.run
+        .withSuccessHandler(displayRequests)
+        .withFailureHandler(function(error) {
+          hideLoading();
+          alert('เกิดข้อผิดพลาด: ' + error.message);
+        })
+        .getUserRequests();
+    }
+    
+    function displayRequests(requests) {
+      hideLoading();
+      
+      let html = '<h3>คำขอของฉัน</h3>';
+      
+      if (requests.length === 0) {
+        html += '<p style="text-align:center; color:#666;">ยังไม่มีคำขอ</p>';
+      } else {
+        html += '<table>';
+        html += '<tr><th>ประเภท</th><th>วันที่</th><th>สถานะ</th><th>การจัดการ</th></tr>';
+        
+        requests.forEach(function(req) {
+          html += '<tr>';
+          html += '<td>' + req.document_type + '</td>';
+          html += '<td>' + formatDate(req.request_date) + '</td>';
+          html += '<td class="status-' + req.status + '">' + getStatusText(req.status) + '</td>';
+          html += '<td>';
+          
+          if (req.status === 'approved' && req.file_url) {
+            html += '<button onclick="downloadFile(\'' + req.file_url + '\')">ดาวน์โหลด</button>';
+          } else if (req.status === 'rejected') {
+            html += '<button onclick="showRejectionReason(\'' + (req.rejection_reason || 'ไม่ระบุ') + '\')">ดูเหตุผล</button>';
+          } else {
+            html += '<span style="color:#999;">รอดำเนินการ</span>';
+          }
+          
+          html += '</td>';
+          html += '</tr>';
+        });
+        
+        html += '</table>';
+      }
+      
+      document.getElementById('content').innerHTML = html;
+    }
+    
+    function downloadFile(fileUrl) {
+      window.open(fileUrl, '_blank');
+    }
+    
+    function showRejectionReason(reason) {
+      alert('เหตุผลที่ปฏิเสธ:\n' + reason);
+    }
+    
+    /**
+     * Helper Functions
+     */
+    function getStatusText(status) {
+      const statusMap = {
+        'pending': 'รออนุมัติ',
+        'approved': 'อนุมัติแล้ว',
+        'rejected': 'ปฏิเสธ'
+      };
+      return statusMap[status] || status;
+    }
+    
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    function showLoading(message) {
+      const content = document.getElementById('content');
+      if (content) {
+        content.innerHTML = '<div class="loading">' + message + '</div>';
+      }
+    }
+    
+    function hideLoading() {
+      // Loading will be replaced by actual content
+    }
+  </script>
+</body>
+</html>
