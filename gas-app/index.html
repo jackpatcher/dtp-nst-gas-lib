@@ -5,175 +5,111 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบขอเอกสารประวัติข้าราชการ</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sarabun': ['Sarabun', 'sans-serif'],
+          },
+        },
+      },
     }
-    
+  </script>
+  
+  <style>
     body {
       font-family: 'Sarabun', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    
-    .container {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      max-width: 600px;
-      width: 100%;
-      padding: 40px;
-    }
-    
-    h1 {
-      color: #667eea;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    
-    h2 {
-      color: #444;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    
-    .subtitle {
-      text-align: center;
-      color: #666;
-      margin-bottom: 30px;
-    }
-    
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 2px solid #ddd;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    
-    input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-    
-    button:hover {
-      background: #764ba2;
-    }
-    
-    button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    
-    .btn-secondary {
-      background: #34a853;
-    }
-    
-    .btn-secondary:hover {
-      background: #2d8e47;
-    }
-    
-    .welcome-box {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    
-    .request-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    
-    th {
-      background: #f8f9fa;
-      font-weight: bold;
-    }
-    
-    .status-pending {
-      color: #ff9800;
-      font-weight: bold;
-    }
-    
-    .status-approved {
-      color: #34a853;
-      font-weight: bold;
-    }
-    
-    .status-rejected {
-      color: #ea4335;
-      font-weight: bold;
-    }
-    
-    .loading {
-      text-align: center;
-      color: #667eea;
-      margin: 20px 0;
     }
   </style>
 </head>
-<body>
-  <div class="container">
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-2xl">
     <!-- Login Form -->
-    <div id="login-form">
-      <h1>🏛️ ระบบขอเอกสารประวัติข้าราชการ</h1>
-      <p class="subtitle">กรุณาเข้าสู่ระบบด้วยเลขประจำตัว 13 หลัก</p>
+    <div id="login-form" class="bg-white rounded-2xl shadow-2xl p-8 md:p-12">
+      <div class="text-center mb-8">
+        <div class="text-6xl mb-4">🏛️</div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">ระบบขอเอกสารประวัติข้าราชการ</h1>
+        <p class="text-gray-600">กรุณาเข้าสู่ระบบด้วยเลขประจำตัว 13 หลัก</p>
+      </div>
       
-      <input type="text" id="id13" placeholder="เลขประจำตัว 13 หลัก" maxlength="13">
-      <input type="password" id="password" placeholder="รหัสผ่าน">
-      <button onclick="login()">เข้าสู่ระบบ</button>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">เลขประจำตัว 13 หลัก</label>
+          <input 
+            type="text" 
+            id="id13" 
+            maxlength="13"
+            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:outline-none transition"
+            placeholder="1234567890123">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">รหัสผ่าน</label>
+          <input 
+            type="password" 
+            id="password"
+            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:outline-none transition"
+            placeholder="••••••••">
+        </div>
+        
+        <button 
+          onclick="login()"
+          class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition duration-200 shadow-lg">
+          เข้าสู่ระบบ
+        </button>
+      </div>
     </div>
     
     <!-- Main Page (Hidden initially) -->
-    <div id="main-page" style="display:none;">
-      <div class="welcome-box">
-        <h2>ยินดีต้อนรับ 👤</h2>
-        <h3 id="user-name"></h3>
+    <div id="main-page" class="hidden">
+      <!-- Welcome Card -->
+      <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 mb-6">
+        <div class="text-center">
+          <div class="text-5xl mb-3">👤</div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-1">ยินดีต้อนรับ</h2>
+          <h3 id="user-name" class="text-xl text-indigo-600 font-semibold"></h3>
+        </div>
       </div>
       
-      <h3>📋 ขอเอกสาร</h3>
-      <div class="request-buttons">
-        <button onclick="requestDocument('กพ7')">กพ.7</button>
-        <button onclick="requestDocument('กคศ16')">กคศ.16</button>
+      <!-- Request Documents Card -->
+      <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 mb-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <span class="text-2xl mr-2">📋</span>
+          ขอเอกสาร
+        </h3>
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <button 
+            onclick="requestDocument('กพ7')"
+            class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition duration-200 shadow-lg">
+            <div class="text-2xl mb-1">📄</div>
+            <div>กพ.7</div>
+          </button>
+          
+          <button 
+            onclick="requestDocument('กคศ16')"
+            class="bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition duration-200 shadow-lg">
+            <div class="text-2xl mb-1">📜</div>
+            <div>กคศ.16</div>
+          </button>
+        </div>
+        
+        <button 
+          onclick="showMyRequests()"
+          class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition duration-200 shadow-lg">
+          📂 ดูคำขอของฉัน
+        </button>
       </div>
       
-      <button class="btn-secondary" onclick="showMyRequests()">ดูคำขอของฉัน</button>
-      
+      <!-- Content Area -->
       <div id="content"></div>
     </div>
   </div>
@@ -208,8 +144,8 @@
       hideLoading();
       
       if (result.success) {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('main-page').style.display = 'block';
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('main-page').classList.remove('hidden');
         document.getElementById('user-name').textContent = result.userName;
       } else {
         alert('เข้าสู่ระบบไม่สำเร็จ: ' + result.message);
@@ -264,36 +200,78 @@
     function displayRequests(requests) {
       hideLoading();
       
-      let html = '<h3>คำขอของฉัน</h3>';
+      let html = '<div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8">';
+      html += '<h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">';
+      html += '<span class="text-2xl mr-2">📂</span>คำขอของฉัน';
+      html += '</h3>';
       
       if (requests.length === 0) {
-        html += '<p style="text-align:center; color:#666;">ยังไม่มีคำขอ</p>';
+        html += '<div class="text-center py-12">';
+        html += '<div class="text-6xl mb-4">📭</div>';
+        html += '<p class="text-gray-500 text-lg">ยังไม่มีคำขอ</p>';
+        html += '</div>';
       } else {
-        html += '<table>';
-        html += '<tr><th>ประเภท</th><th>วันที่</th><th>สถานะ</th><th>การจัดการ</th></tr>';
+        html += '<div class="overflow-x-auto">';
+        html += '<table class="w-full">';
+        html += '<thead>';
+        html += '<tr class="border-b-2 border-gray-200">';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">ประเภท</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">วันที่</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">สถานะ</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">การจัดการ</th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
         
         requests.forEach(function(req) {
-          html += '<tr>';
-          html += '<td>' + req.document_type + '</td>';
-          html += '<td>' + formatDate(req.request_date) + '</td>';
-          html += '<td class="status-' + req.status + '">' + getStatusText(req.status) + '</td>';
-          html += '<td>';
+          html += '<tr class="border-b border-gray-100 hover:bg-gray-50 transition">';
+          html += '<td class="py-3 px-4">';
+          html += '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">';
+          html += req.document_type;
+          html += '</span>';
+          html += '</td>';
+          html += '<td class="py-3 px-4 text-gray-600 text-sm">' + formatDate(req.request_date) + '</td>';
+          html += '<td class="py-3 px-4">';
+          
+          if (req.status === 'pending') {
+            html += '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">';
+            html += '⏳ รออนุมัติ';
+          } else if (req.status === 'approved') {
+            html += '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">';
+            html += '✅ อนุมัติแล้ว';
+          } else if (req.status === 'rejected') {
+            html += '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">';
+            html += '❌ ปฏิเสธ';
+          }
+          
+          html += '</span>';
+          html += '</td>';
+          html += '<td class="py-3 px-4">';
           
           if (req.status === 'approved' && req.file_url) {
-            html += '<button onclick="downloadFile(\'' + req.file_url + '\')">ดาวน์โหลด</button>';
+            html += '<button onclick="downloadFile(\'' + req.file_url + '\')" ';
+            html += 'class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-green-600 hover:to-green-700 transition transform hover:scale-105">';
+            html += '📥 ดาวน์โหลด';
+            html += '</button>';
           } else if (req.status === 'rejected') {
-            html += '<button onclick="showRejectionReason(\'' + (req.rejection_reason || 'ไม่ระบุ') + '\')">ดูเหตุผล</button>';
+            html += '<button onclick="showRejectionReason(\'' + (req.rejection_reason || 'ไม่ระบุ') + '\')" ';
+            html += 'class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition">';
+            html += 'ดูเหตุผล';
+            html += '</button>';
           } else {
-            html += '<span style="color:#999;">รอดำเนินการ</span>';
+            html += '<span class="text-gray-400 text-sm">รอดำเนินการ</span>';
           }
           
           html += '</td>';
           html += '</tr>';
         });
         
+        html += '</tbody>';
         html += '</table>';
+        html += '</div>';
       }
       
+      html += '</div>';
       document.getElementById('content').innerHTML = html;
     }
     
@@ -331,7 +309,10 @@
     function showLoading(message) {
       const content = document.getElementById('content');
       if (content) {
-        content.innerHTML = '<div class="loading">' + message + '</div>';
+        content.innerHTML = '<div class="flex flex-col items-center justify-center py-12">' +
+          '<div class="animate-spin rounded-full h-12 w-12 border-b-4 border-indigo-600 mb-4"></div>' +
+          '<p class="text-gray-600 text-lg">' + message + '</p>' +
+          '</div>';
       }
     }
     

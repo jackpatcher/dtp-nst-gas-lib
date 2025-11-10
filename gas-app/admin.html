@@ -5,161 +5,77 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบจัดการเอกสาร - Admin</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sarabun': ['Sarabun', 'sans-serif'],
+          },
+        },
+      },
     }
-    
+  </script>
+  
+  <style>
     body {
       font-family: 'Sarabun', sans-serif;
-      background: #f5f5f5;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-    
-    .login-box {
-      background: white;
-      border-radius: 10px;
-      padding: 40px;
-      max-width: 400px;
-      margin: 100px auto;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 2px solid #ddd;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    
-    button {
-      padding: 12px 24px;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-right: 10px;
-      margin-bottom: 10px;
-    }
-    
-    button:hover {
-      background: #764ba2;
-    }
-    
-    .btn-success {
-      background: #34a853;
-    }
-    
-    .btn-danger {
-      background: #ea4335;
-    }
-    
-    nav {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-    
-    #content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      min-height: 400px;
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    
-    th {
-      background: #f8f9fa;
-      font-weight: bold;
-    }
-    
-    .status-pending {
-      color: #ff9800;
-    }
-    
-    .status-approved {
-      color: #34a853;
-    }
-    
-    .status-rejected {
-      color: #ea4335;
-    }
-    
-    .upload-area {
-      border: 2px dashed #ddd;
-      padding: 40px;
-      text-align: center;
-      border-radius: 10px;
-      margin: 20px 0;
-    }
-    
-    #uploadStatus {
-      margin-top: 20px;
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 5px;
     }
   </style>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen font-sarabun">
   <!-- Login -->
   <div id="admin-login">
-    <div class="login-box">
-      <h1 style="color:#667eea; text-align:center; margin-bottom:30px;">🔐 Admin Login</h1>
-      <input type="text" id="username" placeholder="Username">
-      <input type="password" id="password" placeholder="Password">
-      <button style="width:100%;" onclick="adminLogin()">เข้าสู่ระบบ</button>
+    <div class="max-w-md mx-auto mt-20 bg-white rounded-2xl shadow-2xl p-10">
+      <h1 class="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        🔐 Admin Login
+      </h1>
+      <input type="text" id="username" placeholder="Username" 
+        class="w-full px-4 py-3 mb-4 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition text-base">
+      <input type="password" id="password" placeholder="Password" 
+        class="w-full px-4 py-3 mb-4 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition text-base">
+      <button onclick="adminLogin()" 
+        class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition transform hover:scale-105">
+        เข้าสู่ระบบ
+      </button>
     </div>
   </div>
   
   <!-- Dashboard -->
-  <div id="admin-dashboard" style="display:none;">
-    <div class="container">
-      <header>
-        <h1>📊 ระบบจัดการเอกสารประวัติข้าราชการ</h1>
-        <p>ยินดีต้อนรับ Admin: <span id="admin-name"></span></p>
+  <div id="admin-dashboard" class="hidden">
+    <div class="max-w-7xl mx-auto p-5">
+      <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-6 rounded-2xl shadow-xl mb-5">
+        <h1 class="text-3xl font-bold mb-2">📊 ระบบจัดการเอกสารประวัติข้าราชการ</h1>
+        <p class="text-lg">ยินดีต้อนรับ Admin: <span id="admin-name" class="font-semibold"></span></p>
       </header>
       
-      <nav>
-        <button onclick="showPendingRequests()">📝 คำขอรออนุมัติ</button>
-        <button onclick="showAllRequests()">📋 คำขอทั้งหมด</button>
-        <button onclick="showUploadFiles()">📤 อัพโหลดไฟล์</button>
-        <button onclick="showStatistics()">📊 สถิติ</button>
-        <button onclick="showAdminLogs()">📜 Log การทำงาน</button>
+      <nav class="bg-white p-4 rounded-2xl shadow-lg mb-5 flex flex-wrap gap-3">
+        <button onclick="showPendingRequests()" 
+          class="px-5 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-indigo-700 transition transform hover:scale-105">
+          📝 คำขอรออนุมัติ
+        </button>
+        <button onclick="showAllRequests()" 
+          class="px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition transform hover:scale-105">
+          📋 คำขอทั้งหมด
+        </button>
+        <button onclick="showUploadFiles()" 
+          class="px-5 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-green-700 transition transform hover:scale-105">
+          📤 อัพโหลดไฟล์
+        </button>
+        <button onclick="showStatistics()" 
+          class="px-5 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition transform hover:scale-105">
+          📊 สถิติ
+        </button>
+        <button onclick="showAdminLogs()" 
+          class="px-5 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg font-medium hover:from-gray-600 hover:to-gray-700 transition transform hover:scale-105">
+          📜 Log การทำงาน
+        </button>
       </nav>
       
-      <div id="content"></div>
+      <div id="content" class="bg-white p-6 rounded-2xl shadow-lg min-h-[400px]"></div>
     </div>
   </div>
   
@@ -186,8 +102,8 @@
     
     function onAdminLoginSuccess(result) {
       if (result.success) {
-        document.getElementById('admin-login').style.display = 'none';
-        document.getElementById('admin-dashboard').style.display = 'block';
+        document.getElementById('admin-login').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
         document.getElementById('admin-name').textContent = result.adminName;
         showPendingRequests();
       } else {
@@ -206,35 +122,73 @@
     }
     
     function displayRequests(requests) {
-      let html = '<h2>คำขอรออนุมัติ (' + requests.length + ' รายการ)</h2>';
+      let html = '<h2 class="text-2xl font-bold text-gray-800 mb-6">คำขอรออนุมัติ (' + requests.length + ' รายการ)</h2>';
       
       if (requests.length === 0) {
-        html += '<p style="text-align:center; color:#666; padding:40px;">ไม่มีคำขอรออนุมัติ</p>';
+        html += '<div class="text-center py-12">';
+        html += '<div class="text-6xl mb-4">📭</div>';
+        html += '<p class="text-gray-500 text-lg">ไม่มีคำขอรออนุมัติ</p>';
+        html += '</div>';
       } else {
-        html += '<table>';
-        html += '<tr><th>เลขประจำตัว</th><th>ชื่อ-สกุล</th><th>ประเภท</th><th>วันที่ขอ</th><th>ไฟล์</th><th>การจัดการ</th></tr>';
+        html += '<div class="overflow-x-auto">';
+        html += '<table class="w-full">';
+        html += '<thead>';
+        html += '<tr class="border-b-2 border-gray-200">';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">เลขประจำตัว</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">ชื่อ-สกุล</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">ประเภท</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">วันที่ขอ</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">ไฟล์</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">การจัดการ</th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
         
         requests.forEach(function(req) {
-          html += '<tr>';
-          html += '<td>' + req.user_id13 + '</td>';
-          html += '<td>' + req.user_name + '</td>';
-          html += '<td>' + req.document_type + '</td>';
-          html += '<td>' + formatDate(req.request_date) + '</td>';
-          html += '<td>' + (req.file_url ? '✅ มีไฟล์' : '❌ ยังไม่มีไฟล์') + '</td>';
-          html += '<td>';
+          html += '<tr class="border-b border-gray-100 hover:bg-gray-50 transition">';
+          html += '<td class="py-3 px-4 text-gray-800">' + req.user_id13 + '</td>';
+          html += '<td class="py-3 px-4 text-gray-800">' + req.user_name + '</td>';
+          html += '<td class="py-3 px-4">';
+          html += '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">';
+          html += req.document_type;
+          html += '</span>';
+          html += '</td>';
+          html += '<td class="py-3 px-4 text-gray-600 text-sm">' + formatDate(req.request_date) + '</td>';
+          html += '<td class="py-3 px-4">';
           
           if (req.file_url) {
-            html += '<button class="btn-success" onclick="approveRequest(\'' + req.uuid + '\')">อนุมัติ</button> ';
+            html += '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">';
+            html += '✅ มีไฟล์';
+            html += '</span>';
           } else {
-            html += '<button disabled>รอไฟล์</button> ';
+            html += '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">';
+            html += '❌ ยังไม่มีไฟล์';
+            html += '</span>';
           }
           
-          html += '<button class="btn-danger" onclick="rejectRequest(\'' + req.uuid + '\')">ปฏิเสธ</button>';
+          html += '</td>';
+          html += '<td class="py-3 px-4">';
+          
+          if (req.file_url) {
+            html += '<button onclick="approveRequest(\'' + req.uuid + '\')" ';
+            html += 'class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-green-600 hover:to-green-700 transition transform hover:scale-105 mr-2">';
+            html += 'อนุมัติ';
+            html += '</button> ';
+          } else {
+            html += '<button disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed mr-2">รอไฟล์</button> ';
+          }
+          
+          html += '<button onclick="rejectRequest(\'' + req.uuid + '\')" ';
+          html += 'class="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-red-600 hover:to-red-700 transition transform hover:scale-105">';
+          html += 'ปฏิเสธ';
+          html += '</button>';
           html += '</td>';
           html += '</tr>';
         });
         
+        html += '</tbody>';
         html += '</table>';
+        html += '</div>';
       }
       
       document.getElementById('content').innerHTML = html;
@@ -268,17 +222,23 @@
      */
     function showUploadFiles() {
       const html = `
-        <h2>📤 อัพโหลดไฟล์ประวัติข้าราชการ</h2>
-        <div class="upload-area">
-          <h3>อัพโหลดไฟล์หลายรายการพร้อมกัน</h3>
-          <p>รูปแบบชื่อไฟล์: <code>ID13_ชื่อ-สกุล.pdf</code></p>
-          <p>ตัวอย่าง: <code>1234567890123_นายทดสอบ_ระบบ.pdf</code></p>
-          <br>
-          <input type="file" id="fileInput" multiple accept=".pdf" style="margin:20px 0;">
-          <br>
-          <button onclick="uploadFiles()">เริ่มอัพโหลด</button>
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">📤 อัพโหลดไฟล์ประวัติข้าราชการ</h2>
+        <div class="border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center bg-gray-50 hover:border-indigo-400 transition">
+          <div class="text-4xl mb-4">📁</div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-3">อัพโหลดไฟล์หลายรายการพร้อมกัน</h3>
+          <p class="text-gray-600 mb-2">รูปแบบชื่อไฟล์: <code class="bg-gray-200 px-2 py-1 rounded text-sm font-mono">ID13_ชื่อ-สกุล.pdf</code></p>
+          <p class="text-gray-600 mb-6">ตัวอย่าง: <code class="bg-gray-200 px-2 py-1 rounded text-sm font-mono">1234567890123_นายทดสอบ_ระบบ.pdf</code></p>
+          <input type="file" id="fileInput" multiple accept=".pdf" 
+            class="block w-full max-w-md mx-auto text-sm text-gray-600 mb-4
+            file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+            file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700
+            hover:file:bg-indigo-100 cursor-pointer">
+          <button onclick="uploadFiles()" 
+            class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition transform hover:scale-105">
+            เริ่มอัพโหลด
+          </button>
         </div>
-        <div id="uploadStatus"></div>
+        <div id="uploadStatus" class="mt-6"></div>
       `;
       
       document.getElementById('content').innerHTML = html;
@@ -293,14 +253,17 @@
         return;
       }
       
-      document.getElementById('uploadStatus').innerHTML = '<p>กำลังอัพโหลด...</p>';
+      document.getElementById('uploadStatus').innerHTML = 
+        '<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded"><p class="text-blue-700 font-medium">⏳ กำลังอัพโหลด...</p></div>';
       uploadFile(files, 0);
     }
     
     function uploadFile(files, index) {
       if (index >= files.length) {
         document.getElementById('uploadStatus').innerHTML = 
-          '<p style="color:green; font-weight:bold;">✅ อัพโหลดเสร็จสิ้น ' + files.length + ' ไฟล์</p>';
+          '<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">' +
+          '<p class="text-green-700 font-bold">✅ อัพโหลดเสร็จสิ้น ' + files.length + ' ไฟล์</p>' +
+          '</div>';
         return;
       }
       
@@ -317,13 +280,15 @@
         google.script.run
           .withSuccessHandler(function(result) {
             const status = document.getElementById('uploadStatus');
-            status.innerHTML += '<p>' + (result.success ? '✅' : '❌') + ' ' + 
+            const statusClass = result.success ? 'text-green-600' : 'text-red-600';
+            const icon = result.success ? '✅' : '❌';
+            status.innerHTML += '<p class="' + statusClass + ' py-1">' + icon + ' ' + 
               file.name + ': ' + result.message + '</p>';
             uploadFile(files, index + 1);
           })
           .withFailureHandler(function(error) {
             const status = document.getElementById('uploadStatus');
-            status.innerHTML += '<p>❌ ' + file.name + ': ' + error.message + '</p>';
+            status.innerHTML += '<p class="text-red-600 py-1">❌ ' + file.name + ': ' + error.message + '</p>';
             uploadFile(files, index + 1);
           })
           .uploadDocumentFile(fileData);
@@ -343,23 +308,45 @@
     }
     
     function displayStatistics(stats) {
-      let html = '<h2>📊 สถิติการขอเอกสาร</h2>';
+      let html = '<h2 class="text-2xl font-bold text-gray-800 mb-6">📊 สถิติการขอเอกสาร</h2>';
       
-      html += '<table style="max-width:500px;">';
-      html += '<tr><th>รายการ</th><th>จำนวน</th></tr>';
-      html += '<tr><td>คำขอทั้งหมด</td><td>' + stats.total + '</td></tr>';
-      html += '<tr><td>รออนุมัติ</td><td class="status-pending">' + stats.pending + '</td></tr>';
-      html += '<tr><td>อนุมัติแล้ว</td><td class="status-approved">' + stats.approved + '</td></tr>';
-      html += '<tr><td>ปฏิเสธ</td><td class="status-rejected">' + stats.rejected + '</td></tr>';
-      html += '<tr><td>ดาวน์โหลดแล้ว</td><td>' + stats.downloaded + '</td></tr>';
-      html += '</table>';
+      html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">';
       
-      html += '<h3 style="margin-top:30px;">จำนวนคำขอแต่ละประเภท</h3>';
-      html += '<table style="max-width:500px;">';
+      // Summary Stats
+      html += '<div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-md">';
+      html += '<h3 class="text-lg font-semibold text-gray-800 mb-4">สถิติภาพรวม</h3>';
+      html += '<div class="space-y-3">';
+      html += '<div class="flex justify-between items-center border-b border-blue-200 pb-2">';
+      html += '<span class="text-gray-700">คำขอทั้งหมด</span><span class="font-bold text-blue-600 text-xl">' + stats.total + '</span>';
+      html += '</div>';
+      html += '<div class="flex justify-between items-center border-b border-blue-200 pb-2">';
+      html += '<span class="text-gray-700">รออนุมัติ</span><span class="font-bold text-yellow-600 text-xl">' + stats.pending + '</span>';
+      html += '</div>';
+      html += '<div class="flex justify-between items-center border-b border-blue-200 pb-2">';
+      html += '<span class="text-gray-700">อนุมัติแล้ว</span><span class="font-bold text-green-600 text-xl">' + stats.approved + '</span>';
+      html += '</div>';
+      html += '<div class="flex justify-between items-center border-b border-blue-200 pb-2">';
+      html += '<span class="text-gray-700">ปฏิเสธ</span><span class="font-bold text-red-600 text-xl">' + stats.rejected + '</span>';
+      html += '</div>';
+      html += '<div class="flex justify-between items-center">';
+      html += '<span class="text-gray-700">ดาวน์โหลดแล้ว</span><span class="font-bold text-purple-600 text-xl">' + stats.downloaded + '</span>';
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+      
+      // By Type Stats
+      html += '<div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 shadow-md">';
+      html += '<h3 class="text-lg font-semibold text-gray-800 mb-4">จำนวนคำขอแต่ละประเภท</h3>';
+      html += '<div class="space-y-3">';
       for (const type in stats.byType) {
-        html += '<tr><td>' + type + '</td><td>' + stats.byType[type] + '</td></tr>';
+        html += '<div class="flex justify-between items-center border-b border-purple-200 pb-2">';
+        html += '<span class="text-gray-700">' + type + '</span><span class="font-bold text-purple-600 text-lg">' + stats.byType[type] + '</span>';
+        html += '</div>';
       }
-      html += '</table>';
+      html += '</div>';
+      html += '</div>';
+      
+      html += '</div>';
       
       document.getElementById('content').innerHTML = html;
     }
@@ -375,21 +362,43 @@
     }
     
     function displayAdminLogs(logs) {
-      let html = '<h2>📜 Log การทำงานของเจ้าหน้าที่</h2>';
+      let html = '<h2 class="text-2xl font-bold text-gray-800 mb-6">📜 Log การทำงานของเจ้าหน้าที่</h2>';
       
-      html += '<table>';
-      html += '<tr><th>เวลา</th><th>Admin</th><th>การกระทำ</th><th>รายละเอียด</th></tr>';
-      
-      logs.forEach(function(log) {
-        html += '<tr>';
-        html += '<td>' + formatDate(log.timestamp) + '</td>';
-        html += '<td>' + log.admin_name + '</td>';
-        html += '<td>' + log.action + '</td>';
-        html += '<td>' + log.details + '</td>';
+      if (logs.length === 0) {
+        html += '<div class="text-center py-12">';
+        html += '<div class="text-6xl mb-4">📋</div>';
+        html += '<p class="text-gray-500 text-lg">ยังไม่มี Log</p>';
+        html += '</div>';
+      } else {
+        html += '<div class="overflow-x-auto">';
+        html += '<table class="w-full">';
+        html += '<thead>';
+        html += '<tr class="border-b-2 border-gray-200">';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">เวลา</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">Admin</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">การกระทำ</th>';
+        html += '<th class="text-left py-3 px-4 font-semibold text-gray-700">รายละเอียด</th>';
         html += '</tr>';
-      });
-      
-      html += '</table>';
+        html += '</thead>';
+        html += '<tbody>';
+        
+        logs.forEach(function(log) {
+          html += '<tr class="border-b border-gray-100 hover:bg-gray-50 transition">';
+          html += '<td class="py-3 px-4 text-gray-600 text-sm">' + formatDate(log.timestamp) + '</td>';
+          html += '<td class="py-3 px-4 text-gray-800">' + log.admin_name + '</td>';
+          html += '<td class="py-3 px-4">';
+          html += '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">';
+          html += log.action;
+          html += '</span>';
+          html += '</td>';
+          html += '<td class="py-3 px-4 text-gray-600 text-sm">' + log.details + '</td>';
+          html += '</tr>';
+        });
+        
+        html += '</tbody>';
+        html += '</table>';
+        html += '</div>';
+      }
       
       document.getElementById('content').innerHTML = html;
     }
@@ -408,7 +417,10 @@
     
     function showLoading() {
       document.getElementById('content').innerHTML = 
-        '<div style="text-align:center; padding:40px;"><h3>กำลังโหลดข้อมูล...</h3></div>';
+        '<div class="flex flex-col items-center justify-center py-12">' +
+        '<div class="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mb-4"></div>' +
+        '<h3 class="text-xl text-gray-700 font-medium">กำลังโหลดข้อมูล...</h3>' +
+        '</div>';
     }
   </script>
 </body>
