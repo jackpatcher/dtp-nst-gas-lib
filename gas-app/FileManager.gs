@@ -12,26 +12,34 @@
 function uploadDocumentFile(fileData) {
   try {
     if (!validateAdminToken()) {
-      return { success: false, message: 'Unauthorized' };
+      return { success: false, message: Config.MESSAGES.UNAUTHORIZED };
     }
     
     // สร้าง/หา folder
-    const folder = getOrCreateFolder('ประวัติข้าราชการ');
+    const folder = getOrCreateFolder(Config.DRIVE_FOLDER_NAME);
     
     // ดึง ID13 และชื่อจากชื่อไฟล์
     // Format: 1234567890123_นายทดสอบ_ระบบ.pdf
     const fileName = fileData.name;
-    const match = fileName.match(/^(\d{13})_(.+)\.pdf$/);
+    const parsed = Config.parseFileName(fileName);
     
-    if (!match) {
+    if (!parsed) {
       return { 
         success: false, 
-        message: 'รูปแบบชื่อไฟล์ไม่ถูกต้อง ต้องเป็น: ID13_ชื่อ-สกุล.pdf' 
+        message: Config.MESSAGES.FILE_FORMAT_ERROR + ' ต้องเป็น: ' + Config.FILE_NAME_FORMAT
       };
     }
     
-    const id13 = match[1];
-    const name = match[2];
+    const id13 = parsed.id13;
+    const name = parsed.name;
+    
+    // ตรวจสอบประเภทไฟล์
+    if (!Config.isValidFileType(fileName, fileData.mimeType)) {
+      return {
+        success: false,
+        message: 'รองรับเฉพาะไฟล์ PDF เท่านั้น'
+      };
+    }
     
     // Decode Base64 และสร้างไฟล์
     const blob = Utilities.newBlob(
@@ -55,7 +63,7 @@ function uploadDocumentFile(fileData) {
     updateRequestsWithFile(id13, fileUrl, fileId);
     
     // บันทึก log
-    logAdminAction('upload_file', 
+    logAdminAction(Config.ADMIN_ACTIONS.UPLOAD_FILE, 
       'Uploaded file: ' + fileName + ' (File ID: ' + fileId + ')');
     
     return {
@@ -63,7 +71,7 @@ function uploadDocumentFile(fileData) {
       fileName: fileName,
       fileUrl: fileUrl,
       fileId: fileId,
-      message: 'อัพโหลดไฟล์เรียบร้อย'
+      message: Config.MESSAGES.FILE_UPLOADED
     };
     
   } catch (error) {
@@ -121,7 +129,7 @@ function getOrCreateFolder(folderName) {
 function uploadMultipleFiles(filesData) {
   try {
     if (!validateAdminToken()) {
-      return { success: false, message: 'Unauthorized' };
+      return { success: false, message: Config.MESSAGES.UNAUTHORIZED };
     }
     
     const results = [];
@@ -133,7 +141,7 @@ function uploadMultipleFiles(filesData) {
     
     const successCount = results.filter(function(r) { return r.success; }).length;
     
-    logAdminAction('upload_multiple_files',
+    logAdminAction(Config.ADMIN_ACTIONS.UPLOAD_MULTIPLE,
       'Uploaded ' + successCount + '/' + filesData.length + ' files');
     
     return {

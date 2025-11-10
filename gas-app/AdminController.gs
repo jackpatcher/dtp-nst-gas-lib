@@ -27,17 +27,17 @@ function adminLogin(username, password) {
     
     // 3. เก็บ token ใน User Properties
     PropertiesService.getUserProperties()
-      .setProperty('ADMIN_TOKEN', tokenResult.token)
-      .setProperty('ADMIN_ID', admin.uuid)
-      .setProperty('ADMIN_NAME', username);
+      .setProperty(Config.PROPERTIES.ADMIN_TOKEN, tokenResult.token)
+      .setProperty(Config.PROPERTIES.ADMIN_ID, admin.uuid)
+      .setProperty(Config.PROPERTIES.ADMIN_NAME, username);
     
     // 4. บันทึก log การ login
-    logAdminAction('admin_login', 'Admin logged in: ' + username);
+    logAdminAction(Config.ADMIN_ACTIONS.LOGIN, 'Admin logged in: ' + username);
     
     return {
       success: true,
       adminName: username,
-      message: 'Login successful'
+      message: Config.MESSAGES.LOGIN_SUCCESS
     };
     
   } catch (error) {

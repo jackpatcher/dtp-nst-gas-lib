@@ -8,14 +8,11 @@
  */
 function registerApp() {
   try {
-    const APP_KEY = 'gas-app-document-system-2025';
-    const APP_NAME = 'ระบบขอเอกสารประวัติข้าราชการ';
-    
     const appData = {
       uuid: Utilities.getUuid(),
-      app_key: APP_KEY,
-      app_name: APP_NAME,
-      description: 'ระบบขอเอกสาร กพ.7 และ กคศ.16',
+      app_key: Config.APP_KEY,
+      app_name: Config.APP_NAME,
+      description: Config.APP_DESCRIPTION,
       status: 'active',
       created_at: new Date().toISOString()
     };
@@ -24,15 +21,14 @@ function registerApp() {
     dtpnstlib.Sheet.append('applications', appData);
     
     // เก็บ APP_KEY ใน Script Properties
-    PropertiesService.getScriptProperties()
-      .setProperty('APP_KEY', APP_KEY);
+    Config.setAppKey();
     
     Logger.log('✅ App registered successfully!');
-    Logger.log('APP_KEY: ' + APP_KEY);
+    Logger.log('APP_KEY: ' + Config.APP_KEY);
     
     return {
       success: true,
-      appKey: APP_KEY,
+      appKey: Config.APP_KEY,
       message: 'App registered successfully'
     };
     
@@ -53,16 +49,11 @@ function createAppSheets() {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     
     // 1. สร้าง document_requests sheet
-    let requestsSheet = ss.getSheetByName('document_requests');
+    let requestsSheet = ss.getSheetByName(Config.SHEETS.DOCUMENT_REQUESTS);
     if (!requestsSheet) {
-      requestsSheet = ss.insertSheet('document_requests');
+      requestsSheet = ss.insertSheet(Config.SHEETS.DOCUMENT_REQUESTS);
       
-      const requestsHeaders = [
-        'uuid', 'user_id', 'user_id13', 'user_name', 'document_type',
-        'request_date', 'status', 'approved_by', 'approved_date',
-        'rejected_by', 'rejection_reason', 'file_url', 'file_id',
-        'downloaded', 'download_date', 'created_at', 'updated_at'
-      ];
+      const requestsHeaders = Config.DOCUMENT_REQUESTS_SCHEMA;
       
       requestsSheet.getRange(1, 1, 1, requestsHeaders.length)
         .setValues([requestsHeaders])
@@ -76,13 +67,11 @@ function createAppSheets() {
     }
     
     // 2. สร้าง admin_logs sheet
-    let logsSheet = ss.getSheetByName('admin_logs');
+    let logsSheet = ss.getSheetByName(Config.SHEETS.ADMIN_LOGS);
     if (!logsSheet) {
-      logsSheet = ss.insertSheet('admin_logs');
+      logsSheet = ss.insertSheet(Config.SHEETS.ADMIN_LOGS);
       
-      const logsHeaders = [
-        'uuid', 'admin_id', 'admin_name', 'action', 'details', 'timestamp'
-      ];
+      const logsHeaders = Config.ADMIN_LOGS_SCHEMA;
       
       logsSheet.getRange(1, 1, 1, logsHeaders.length)
         .setValues([logsHeaders])
